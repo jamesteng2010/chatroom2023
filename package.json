@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next export",
+    "build": "next build",
     "start": "cross-env  HOST=0.0.0.0  APP_TARGET=dev NODE_OPTIONS='--inspect' NODE_TLS_REJECT_UNAUTHORIZED='0' next dev",
     "lint": "next lint"
   },

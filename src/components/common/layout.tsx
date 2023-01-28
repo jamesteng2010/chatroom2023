@@ -1,5 +1,5 @@
 import Header from "./header";
-import './global.css'
+
 import Footer from "./footer";
 
 export default function SiteLayout(props: any) {
