@@ -8,8 +8,14 @@ import '../style.css'
 
 export default function Index(){
     const [signUp,setSignUp] = useState(false)
+    const closeSignUp = (event: any,reason:any)=>{
+        if(reason && reason == "backdropClick"){
+            return;
+        }
+        setSignUp(false)
+    }
     return <SiteLayout loginClick={()=>setSignUp(true)}>
         <HomePage startVideoClick={()=>setSignUp(true)}></HomePage>
-        <SignUp showSignUp={signUp} closeSignUp={()=>setSignUp(false)}/>
+        <SignUp showSignUp={signUp} closeSignUp={closeSignUp}/>
     </SiteLayout>
 }

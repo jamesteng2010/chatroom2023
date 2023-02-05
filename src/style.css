@@ -72,5 +72,45 @@ body{
     padding: 10px;
     background-color: rgb(34, 34, 34);
     color : white;
+    border: 2px solid white;
   }
+
+  .codeVerifyWindow{
+    padding: 10px;
+    background-color: rgb(34, 34, 34);
+    color : white;
+  }
+
+  .errorMsg{
+    font-size: 16px;
+    color: red;
+    font-style: italic;
+  }
+
+  .codes{
+    display: flex;
+    margin-top: 10px;
+  }
+  .code {
+    margin-left: 20px;
+    height: 50px;
+    width: 40px;
+    background-color: rgb(34, 34, 34);
+    color: white;
+    border : 1px solid white;
+    font-size: 48px;
+    
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
 

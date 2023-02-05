@@ -21,5 +21,5 @@ export const  getRandomCode = ()=>{
       , max:  9999
       , integer: true
       }
-     return  rn(options) 
+     return  rn(options).toString() 
 }
