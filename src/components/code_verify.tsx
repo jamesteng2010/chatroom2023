@@ -1,11 +1,16 @@
-
 import { sendRequest } from "@/utils/httpUtils";
 import { CircularProgress } from "@mui/material";
 import TextField from "@mui/material/TextField";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect ,useContext} from "react";
+import { setCookie } from "cookies-next";
+import { GlobalConfig } from "@/config";
+import ErrorMsg from "./common/errorMsg";
+import AppContext from "@/context/userDataContext";
 
 export default function CodeVerify(props: any) {
-  const { mobile } = props;
+  const appContext = useContext(AppContext)
+  const {setUserData} = appContext
+  const { mobile,setStep } = props;
   const [sending, setSending] = useState(false);
 
   const [code1, setCode1] = useState("" as any);
@@ -17,10 +22,10 @@ export default function CodeVerify(props: any) {
   const code2Ref = useRef<HTMLInputElement>(null);
   const code3Ref = useRef<HTMLInputElement>(null);
   const code4Ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    code1Ref.current?.focus();
-  }, []);
+  const [verifiedError, setVerifiedError] = useState(false);
+
   const changeCode1 = (e: any) => {
+    setVerifiedError(false);
     const typedValue = parseInt(e.target.value);
 
     if (typedValue > 9) {
@@ -32,6 +37,7 @@ export default function CodeVerify(props: any) {
   };
 
   const changeCode2 = (e: any) => {
+    setVerifiedError(false);
     const typedValue = parseInt(e.target.value);
 
     if (typedValue > 9) {
@@ -42,6 +48,7 @@ export default function CodeVerify(props: any) {
     }
   };
   const changeCode3 = (e: any) => {
+    setVerifiedError(false);
     const typedValue = parseInt(e.target.value);
 
     if (typedValue > 9) {
@@ -52,46 +59,72 @@ export default function CodeVerify(props: any) {
     }
   };
   const changeCode4 = (e: any) => {
+    setVerifiedError(false);
     const typedValue = parseInt(e.target.value);
     console.log("typed value is ", typedValue);
     if (typedValue > 9) {
       return false;
     } else {
       setCode4(typedValue);
-      if (typedValue) {
-        setCodes(`${code1}${code2}${code3}${typedValue}`);
+      const newCode = `${code1}${code2}${code3}${typedValue}`
+      console.log("new code is , ",newCode)
+      if (typedValue || typedValue == 0 ) {
+        console.log("not come here????")
+        setCodes(newCode);
+     
       }
     }
   };
 
   useEffect(() => {
-    if(codes){
+    console.log("why the code can not ")
+    if (codes) {
+      console.log("now the code is , ",codes)
       verifyTypedCode();
+    } else {
+      code1Ref.current?.focus();
     }
-    
   }, [codes]);
   const verifyTypedCode = async () => {
     setSending(true);
 
-    const verifyResult = await  sendRequest("/api/verifyTypedCode",{
+    const verifyResult = await sendRequest("/api/verifyTypedCode", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ mobile: mobile, code: codes }),
-    })
-   
-    if(verifyResult.result){
-      
+    });
+
+    if (verifyResult.clientToken) {
+      setCookie("clientToken", verifyResult.clientToken, {
+        maxAge: GlobalConfig.clientTokenExpire,
+      });
+      if(!verifyResult.userData){
+        setStep(3)
+      }
+      else{
+        setStep(4)
+      }
+      setUserData(verifyResult.userData)
+    } else {
+      setCode1("");
+      setCode2("");
+      setCode3("");
+      setCode4("");
+      setCodes("");
+      setVerifiedError(true);
     }
-    console.log("verify Result is  : ", verifyResult);
+
+    setSending(false);
   };
+
   return (
     <>
       {!sending && (
         <div className="codeVerifyWindow">
-          Verify Code:
+          A verify code has been sent, please type:
           <div className="codes">
             <input
               className="code"
@@ -100,6 +133,7 @@ export default function CodeVerify(props: any) {
               onChange={changeCode1}
               type={"number"}
               maxLength={1}
+     
             />
             <input
               className="code"
@@ -108,6 +142,7 @@ export default function CodeVerify(props: any) {
               onChange={changeCode2}
               type={"number"}
               maxLength={1}
+        
             />
             <input
               className="code"
@@ -116,6 +151,7 @@ export default function CodeVerify(props: any) {
               onChange={changeCode3}
               type={"number"}
               maxLength={1}
+
             />
             <input
               className="code"
@@ -124,8 +160,12 @@ export default function CodeVerify(props: any) {
               onChange={changeCode4}
               type={"number"}
               maxLength={1}
+      
             />
           </div>
+          {verifiedError && (
+            <ErrorMsg errMsg={"Verify code is wrong, please check!"}></ErrorMsg>
+          )}
         </div>
       )}
 

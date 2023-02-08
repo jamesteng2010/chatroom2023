@@ -11,11 +11,51 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import AccountCircleSharpIcon from "@mui/icons-material/AccountCircleSharp";
+import {useContext,useEffect} from 'react'
+import AppContext from "@/context/userDataContext";
+import { getCookie } from "cookies-next";
+import { sendRequest } from "@/utils/httpUtils";
+import CircularProgress from "@mui/material/CircularProgress";
+
 
 export default function Header(props: any) {
+  const appContext = useContext(AppContext)
   const { loginClick } = props;
   const largeScreen = useMediaQuery("(min-width:600px)");
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+
+  useEffect(() => {
+    verifyToken()
+}, []);
+
+const verifyToken = async ()=>{
+  appContext.setLoadingUserData(true)
+  const clientToken = await getCookie("clientToken");
+  if(clientToken){
+    const verifyResult = await sendRequest("/api/getUserInfoByClientToken", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+  
+    if (verifyResult.result == 1) {
+      console.log(verifyResult.foundUser.name)
+      appContext.setUserData(verifyResult.foundUser.name)
+    }
+    else{
+      if (verifyResult.result !== 1) {
+        appContext.setSignUpStep(3);
+        
+      }
+    }
+  }
+  appContext.setLoadingUserData(false)
+}
 
   return (
     <div className="header">
@@ -38,6 +78,7 @@ export default function Header(props: any) {
               <ListItemText>Shop</ListItemText>
             </ListItemButton>
           </ListItem>
+         
           <ListItem>
             <ListItemButton onClick={loginClick}>
               <ListItemIcon>
@@ -58,7 +99,17 @@ export default function Header(props: any) {
             Shop
           </Button>
           <div style={{ marginLeft: 10 }}></div>
-          <Button onClick={loginClick} variant="outlined">Login</Button>
+          {
+            appContext.loadingUserData && <CircularProgress />
+          }
+
+          {
+            !appContext.loadingUserData && !appContext?.userData && 
+         
+          <Button onClick={loginClick} variant="outlined">Login</Button>  }
+          {
+            <>{appContext?.userData}</>
+          }
         </div>
       )}
     </div>

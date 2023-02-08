@@ -34,7 +34,8 @@ export const findCollecction = async (
 export const findOneCollection = async (
   database: string,
   collection: string,
-  filter: any
+  filter: any,
+  projection? : any
 ) => {
   const returnResult = await sendRequest(`${GlobalConfig.mongoDataAPI}findOne`, {
     method: "POST",
@@ -42,6 +43,7 @@ export const findOneCollection = async (
     body: JSON.stringify({
       ...getRequestCommonPart(database, collection),
       filter: filter,
+      projection : {...projection,"_id":0}
     }),
   });
   if(returnResult){
