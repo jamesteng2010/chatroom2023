@@ -19,18 +19,18 @@ export default async function api_getUserInfoByClientToken(
     if(foundMobile){
         const foundUser = await findOneCollection(GlobalConfig.databaseName,"user",{mobile : foundMobile.mobile})
         if(foundUser){
-            res.status(200).json({result : 1,foundUser})
+            res.status(200).send({result : 1,foundUser})
         }
         else{
-            res.status(200).json({result : -1})
+            res.status(200).send({result : -1})
         }
         
         
     }
     else{
-        res.status(200).json({result : -2})
+        res.status(200).send({result : -2})
     }
-    res.status(404).json({notFound:true})
+   
 
   }
   
