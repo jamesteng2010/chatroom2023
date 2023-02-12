@@ -242,7 +242,7 @@ export default function ChatWindow(props: any) {
         tempPeer.signal( heartBeatResult.lockedUserOffer)
         
       } else {
-        await sleep(200);
+        await sleep(1000);
         sendHeartBeatWhenSearching();
       }
     } else {
