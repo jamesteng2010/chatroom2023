@@ -15,6 +15,38 @@ const getRequestCommonPart = (database: string, collection: string) => {
   };
 };
 
+
+export const deleteOneCollection = async (
+  database: string,
+  collection: string,
+  filter: any
+) => {
+  return sendRequest(`${GlobalConfig.mongoDataAPI}deleteOne`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      ...getRequestCommonPart(database, collection),
+      filter: filter,
+    }),
+  });
+};
+
+
+export const deleteCollections = async (
+  database: string,
+  collection: string,
+  filter: any
+) => {
+  return sendRequest(`${GlobalConfig.mongoDataAPI}deleteMany`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      ...getRequestCommonPart(database, collection),
+      filter: filter,
+    }),
+  });
+};
+
 export const findCollecction = async (
   database: string,
   collection: string,
