@@ -5,7 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import { sendRequest, sleep } from "@/utils/httpUtils";
 import { getCookie } from "cookies-next";
-import { getNow } from "@/utils/dateUtils";
+import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
   const { show, closeChatWindow } = props;
@@ -15,8 +15,10 @@ export default function ChatWindow(props: any) {
 
   const [stream, setStream] = useState(null as any);
   const [peer, setPeer] = useState(null as any);
-  const [slaveAnswer,setSlaveAnswer]= useState(null as any)
-  const [connected,setConnected] = useState(false)
+  const [slaveAnswer, setSlaveAnswer] = useState(null as any);
+  const [connected, setConnected] = useState(false);
+  const [time_partnerLast,setTime_partnerLast]  = useState(0)
+  const [partnerLost,setParnterLost] = useState(false)
 
   var remoteVideo: any;
 
@@ -77,73 +79,79 @@ export default function ChatWindow(props: any) {
         if (offer.type == "offer") {
           updateMasterOffer(offer);
         }
-        if(offer.type == "answer"){
-          tellMaster_slaveAnswer(offer)
+        if (offer.type == "answer") {
+          tellMaster_slaveAnswer(offer);
         }
       });
 
-      peer && peer.on('connect',async()=>{
-        console.log(" peer connected ")
-        setMatching(false)
-        setConnected(true)
+    peer &&
+      peer.on("connect", async () => {
+        console.log(" peer connected ");
+        setMatching(false);
+        setConnected(true);
+      });
 
-      })
+    peer &&
+      peer.on("error", (err: any) => {
+        console.log("error happens : ", err);
+        setConnected(false);
+        startMatch();
+      });
 
-      peer && peer.on("error",(err:any)=>{
-        console.log("error happens : ",err)
-        setConnected(false)
-        startMatch()
-      })
+    peer &&
+      peer.on("data", (data: any) => {
+        console.log("receive data from ====>", data);
+        if(data == "[CMD]:IAMLIVE"){
+           setTime_partnerLast(getNow())
+        }
+      });
 
     console.log(peer);
   }, [peer]);
 
-  useEffect(()=>{
-    if(connected){
-        tellServerUserIsAlive()
-    }
-  },[connected])
+  useEffect(() => {
+    if (connected) {
+      tellPartnerIAmAlive();
 
-  const tellServerUserIsAlive = async ()=>{
+    }
+  }, [connected]);
+
+  const tellPartnerIAmAlive = () => {
+    peer && peer.send("[CMD]:IAMLIVE");
+    setTimeout(() => {
+      const connectEle: any = document.getElementById("connected");
+      if (connectEle.value == "T") {
+        tellPartnerIAmAlive();
+      }
+    }, 1000);
+  };
+
+  const checkPartnerStatus = ()=>{
+    if(getDiffFromNow(time_partnerLast,"seconds")>5){
+        setParnterLost(true)
+    }
+    else{
+      checkPartnerStatus()
+    }
     
-
-    console.log("keep retrieve itself status ");
-    const connectedEle: any = document.getElementById("connected");
-    if(connectedEle == null){
-      return ;
-    }
-    if (connectedEle.value == "T") {
-      const clientToken = await getCookie("clientToken");
-
-      const heartBeatResult = await sendRequest(
-        "/api/matching/matchingHeartBeat",
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ clientToken }),
-        }
-      );
-
-      await sleep(1000);
-      tellServerUserIsAlive()
-
   }
-}
-
-
 
   useEffect(()=>{
-    if(slaveAnswer){
-      console.log("step 7 : master get slave answer , so signal for confirm again")
-      console.log("slave answer is , ",slaveAnswer)
-      console.log("peer is , ",peer)
-      peer &&  peer.signal(slaveAnswer)
+    console.log("partner lost , now should handle ....")
+  },[partnerLost])
+
+
+
+  useEffect(() => {
+    if (slaveAnswer) {
+      console.log(
+        "step 7 : master get slave answer , so signal for confirm again"
+      );
+      console.log("slave answer is , ", slaveAnswer);
+      console.log("peer is , ", peer);
+      peer && peer.signal(slaveAnswer);
     }
-    
-  },[slaveAnswer])
+  }, [slaveAnswer]);
 
   // step 1. send peer offer to server to save it
 
@@ -204,7 +212,7 @@ export default function ChatWindow(props: any) {
   const sendHeartBeatWhenSearching = async () => {
     console.log("keep retrieve itself status ");
     const matchingEle: any = document.getElementById("matchingEle");
-    if(!matchingEle){
+    if (!matchingEle) {
       return;
     }
     console.log("matching value is ", matchingEle.value);
@@ -230,17 +238,16 @@ export default function ChatWindow(props: any) {
         const lockedByEle: any = document.getElementById("lockedBy");
         lockedByEle && (lockedByEle.value = heartBeatResult.lockedBy);
         masterSignal();
-        waitSlaveAnswer()
+        waitSlaveAnswer();
       } else if (
         heartBeatResult.status == "peering" &&
         heartBeatResult.role == "slave" &&
         heartBeatResult.lockedUserOffer != null
       ) {
-        console.log("step 5 : slave get offer and signal ")
-        const tempPeer = new Peer({ initiator: false, trickle: false })
+        console.log("step 5 : slave get offer and signal ");
+        const tempPeer = new Peer({ initiator: false, trickle: false });
         setPeer(tempPeer);
-        tempPeer.signal( heartBeatResult.lockedUserOffer)
-        
+        tempPeer.signal(heartBeatResult.lockedUserOffer);
       } else {
         await sleep(1000);
         sendHeartBeatWhenSearching();
@@ -250,12 +257,10 @@ export default function ChatWindow(props: any) {
     }
   };
 
-
-
-  const tellMaster_slaveAnswer = async(answer :any)=>{
-    console.log("step 6 : slave update master record for the answer")
+  const tellMaster_slaveAnswer = async (answer: any) => {
+    console.log("step 6 : slave update master record for the answer");
     const clientToken = await getCookie("clientToken");
-    const tellRequestResult = await  sendRequest(
+    const tellRequestResult = await sendRequest(
       "/api/matching/tellMasterSlaveAnswer",
       {
         method: "POST",
@@ -263,12 +268,12 @@ export default function ChatWindow(props: any) {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ lockedBy : clientToken , answer }),
+        body: JSON.stringify({ lockedBy: clientToken, answer }),
       }
     );
-  }
+  };
   // step 6 : waiting for slave answer
-  const waitSlaveAnswer = async ()=>{
+  const waitSlaveAnswer = async () => {
     const clientToken = await getCookie("clientToken");
     const heartBeatResult = await sendRequest(
       "/api/matching/matchingHeartBeat",
@@ -281,18 +286,13 @@ export default function ChatWindow(props: any) {
         body: JSON.stringify({ clientToken }),
       }
     );
-    if(heartBeatResult && heartBeatResult.slaveAnswer){
-
-    
-      setSlaveAnswer(heartBeatResult.slaveAnswer)
-      
+    if (heartBeatResult && heartBeatResult.slaveAnswer) {
+      setSlaveAnswer(heartBeatResult.slaveAnswer);
+    } else {
+      await sleep(200);
+      waitSlaveAnswer();
     }
-    else{
-      await sleep(200)
-      waitSlaveAnswer()
-    }
-
-  }
+  };
 
   // step 3 : master create offer to slave
   const masterSignal = () => {
@@ -341,19 +341,16 @@ export default function ChatWindow(props: any) {
       body: JSON.stringify({ clientToken }),
     });
     setPeer(null);
-    setConnected(false)
+    setConnected(false);
   };
 
-  const closeChat = ()=>{
-    console.log("close chat window, so clean everything...")
-    if(matching || connected){
-      stopMatching()
-      
+  const closeChat = () => {
+    console.log("close chat window, so clean everything...");
+    if (matching || connected) {
+      stopMatching();
     }
-    closeChatWindow && closeChatWindow()
-  
-  }
-  
+    closeChatWindow && closeChatWindow();
+  };
 
   return (
     <Dialog fullScreen open={show} onClose={closeChat}>
@@ -366,9 +363,7 @@ export default function ChatWindow(props: any) {
             className="searchIcon"
             style={{ background: matching ? "red" : "white" }}
           >
-            {connected && (
-              <Button>Next</Button>
-            )}
+            {connected && <Button>Next</Button>}
             {!matching && !connected && (
               <SearchIcon
                 onClick={startMatch}
@@ -381,13 +376,11 @@ export default function ChatWindow(props: any) {
               id="matchingEle"
             ></input>
 
-<input
+            <input
               type="hidden"
               value={connected ? "T" : "F"}
               id="connected"
             ></input>
-
-            
 
             <input type="hidden" id="lockedBy"></input>
 
