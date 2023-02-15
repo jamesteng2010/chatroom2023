@@ -102,7 +102,7 @@ export default function ChatWindow(props: any) {
 
     peer &&
       peer.on("error", (err: any) => {
-        if (show) {
+        if (show && connected) {
           console.log("error happens : ", err);
           setConnected(false);
           startMatch();
@@ -147,11 +147,11 @@ export default function ChatWindow(props: any) {
     if (timePartnerLastEle) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
       if (timePartnerLastEle) {
-        console.log("time_partner last is , ", lastUpdateTime);
-        console.log(
-          "difference from now is , ",
-          getDiffFromNow(lastUpdateTime, "seconds")
-        );
+        // console.log("time_partner last is , ", lastUpdateTime);
+        // console.log(
+        //   "difference from now is , ",
+        //   getDiffFromNow(lastUpdateTime, "seconds")
+        // );
         if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
           setParnterLost(true);
         } else {
@@ -435,7 +435,7 @@ export default function ChatWindow(props: any) {
             className="searchIcon"
             style={{ background: matching ? "red" : "white" }}
           >
-            {connected && <Button>Next</Button>}
+            {connected && <Button onClick={stopMatching}>Stop</Button>}
             {!matching && !connected && (
               <SearchIcon
                 onClick={startMatch}
@@ -479,6 +479,13 @@ export default function ChatWindow(props: any) {
         type="hidden"
         value={time_partnerLast}
         id="timePartnerLast"
+      ></input>
+
+
+<input
+        type="hidden"
+        value={peer != null?'Y':'N'}
+        id="peerExists"
       ></input>
     </Dialog>
   );
