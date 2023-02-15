@@ -19,6 +19,8 @@ export const getDiffFromNow = (compareDateTime:any, unit:any, comparedFormatStr?
     comparedMoment = moment(compareDateTime);
   }
  
+  // console.log("now is , ",now)
+  // console.log("compare is , ",comparedMoment)
   return now.diff(comparedMoment, unit);
 };
 

@@ -6,6 +6,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { sendRequest, sleep } from "@/utils/httpUtils";
 import { getCookie } from "cookies-next";
 import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
+import { convertUint8ToString } from "@/utils/strUtil";
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
   const { show, closeChatWindow } = props;
@@ -17,8 +18,14 @@ export default function ChatWindow(props: any) {
   const [peer, setPeer] = useState(null as any);
   const [slaveAnswer, setSlaveAnswer] = useState(null as any);
   const [connected, setConnected] = useState(false);
-  const [time_partnerLast,setTime_partnerLast]  = useState(0)
-  const [partnerLost,setParnterLost] = useState(false)
+  const [time_partnerLast, setTime_partnerLast] = useState(0);
+  const [partnerLost, setParnterLost] = useState(false);
+  const [peerStatus, setPeerStatus] = useState(0); // 1.  searching partner   2.matched  3. peered  -1. idle    -2. lost peer   -3. failed to connect
+  // 4. saved itself to database for matching
+  // 5. found matched partner and you are master to initialize peer connection
+  // 6. wait slave answer
+  // 7. get slave answer
+  // 0. stop searching
 
   var remoteVideo: any;
 
@@ -89,20 +96,25 @@ export default function ChatWindow(props: any) {
         console.log(" peer connected ");
         setMatching(false);
         setConnected(true);
+        setPeerStatus(3);
+        setTime_partnerLast(getNow());
       });
 
     peer &&
       peer.on("error", (err: any) => {
-        console.log("error happens : ", err);
-        setConnected(false);
-        startMatch();
+        if (show) {
+          console.log("error happens : ", err);
+          setConnected(false);
+          startMatch();
+        }
       });
 
     peer &&
       peer.on("data", (data: any) => {
-        console.log("receive data from ====>", data);
-        if(data == "[CMD]:IAMLIVE"){
-           setTime_partnerLast(getNow())
+        const receivedStr = convertUint8ToString(data);
+        console.log("receive data from ====>", receivedStr);
+        if (receivedStr == "[CMD]:IAMLIVE") {
+          setTime_partnerLast(getNow());
         }
       });
 
@@ -112,35 +124,53 @@ export default function ChatWindow(props: any) {
   useEffect(() => {
     if (connected) {
       tellPartnerIAmAlive();
-
+      checkPartnerStatus();
+      setParnterLost(false);
     }
   }, [connected]);
 
   const tellPartnerIAmAlive = () => {
-    peer && peer.send("[CMD]:IAMLIVE");
-    setTimeout(() => {
-      const connectEle: any = document.getElementById("connected");
-      if (connectEle.value == "T") {
-        tellPartnerIAmAlive();
-      }
-    }, 1000);
+    try {
+      peer && peer.send("[CMD]:IAMLIVE");
+      setTimeout(() => {
+        const connectEle: any = document.getElementById("connected");
+
+        if (connectEle && connectEle.value == "T") {
+          tellPartnerIAmAlive();
+        }
+      }, 1000);
+    } catch (e) {}
   };
 
-  const checkPartnerStatus = ()=>{
-    if(getDiffFromNow(time_partnerLast,"seconds")>5){
-        setParnterLost(true)
+  const checkPartnerStatus = () => {
+    const timePartnerLastEle: any = document.getElementById("timePartnerLast");
+    if (timePartnerLastEle) {
+      const lastUpdateTime = parseInt(timePartnerLastEle.value);
+      if (timePartnerLastEle) {
+        console.log("time_partner last is , ", lastUpdateTime);
+        console.log(
+          "difference from now is , ",
+          getDiffFromNow(lastUpdateTime, "seconds")
+        );
+        if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
+          setParnterLost(true);
+        } else {
+          setTimeout(() => {
+            checkPartnerStatus();
+          }, 1000);
+       
+        }
+      }
     }
-    else{
-      checkPartnerStatus()
-    }
-    
-  }
+  };
 
-  useEffect(()=>{
-    console.log("partner lost , now should handle ....")
-  },[partnerLost])
-
-
+  useEffect(() => {
+      if(partnerLost){
+        resetUser();
+        setMatching(true)
+        setPeerStatus(1)
+      }
+  }, [partnerLost]);
 
   useEffect(() => {
     if (slaveAnswer) {
@@ -179,7 +209,7 @@ export default function ChatWindow(props: any) {
         }
       );
 
-      findPartner();
+      setPeerStatus(4);
     } catch (e) {
       setMatching(false);
       console.log("on step 1 , failed to save master offer");
@@ -205,11 +235,49 @@ export default function ChatWindow(props: any) {
 
   const startMatch = async () => {
     setMatching(true);
-    await createPeerMatch();
-    sendHeartBeatWhenSearching();
+
+    setPeerStatus(1);
+  };
+
+  useEffect(() => {
+    console.log("peer status is , ", peerStatus);
+    actionByPeerStatus();
+    if (peerStatus == 4) {
+      sendHeartBeatWhenSearching();
+    }
+  }, [peerStatus]);
+
+  const actionByPeerStatus = async () => {
+    if (peerStatus == 0) {
+      resetUser();
+    }
+    if (peerStatus == 1) {
+      await createPeerMatch();
+    }
+
+    if (peerStatus == 4) {
+      findPartner();
+    }
+    if (peerStatus == 5) {
+      masterSignal();
+    }
+    if (peerStatus == 6) {
+      waitSlaveAnswer();
+    }
+    if (peerStatus == 3) {
+      tellPartnerIAmAlive();
+    }
   };
 
   const sendHeartBeatWhenSearching = async () => {
+    const statusEle: any = document.getElementById("peerStatus");
+    if (!statusEle) {
+      return;
+    }
+    console.log("status element value is , ", statusEle.value);
+    if (statusEle.value != 1 && statusEle.value != 4) {
+      return;
+    }
     console.log("keep retrieve itself status ");
     const matchingEle: any = document.getElementById("matchingEle");
     if (!matchingEle) {
@@ -237,8 +305,7 @@ export default function ChatWindow(props: any) {
       ) {
         const lockedByEle: any = document.getElementById("lockedBy");
         lockedByEle && (lockedByEle.value = heartBeatResult.lockedBy);
-        masterSignal();
-        waitSlaveAnswer();
+        setPeerStatus(5);
       } else if (
         heartBeatResult.status == "peering" &&
         heartBeatResult.role == "slave" &&
@@ -321,6 +388,7 @@ export default function ChatWindow(props: any) {
           }),
         }
       );
+      setPeerStatus(6);
     } catch (e) {
       console.log(e);
     }
@@ -340,6 +408,10 @@ export default function ChatWindow(props: any) {
       },
       body: JSON.stringify({ clientToken }),
     });
+    setPeerStatus(0);
+  };
+
+  const resetUser = () => {
     setPeer(null);
     setConnected(false);
   };
@@ -400,6 +472,14 @@ export default function ChatWindow(props: any) {
           ></video>
         </div>
       </div>
+
+      <input type="hidden" value={peerStatus} id="peerStatus"></input>
+
+      <input
+        type="hidden"
+        value={time_partnerLast}
+        id="timePartnerLast"
+      ></input>
     </Dialog>
   );
 }
