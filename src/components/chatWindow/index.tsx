@@ -19,7 +19,7 @@ export default function ChatWindow(props: any) {
   const [slaveAnswer, setSlaveAnswer] = useState(null as any);
   const [connected, setConnected] = useState(false);
   const [time_partnerLast, setTime_partnerLast] = useState(0);
-  const [partnerLost, setParnterLost] = useState(false);
+  const [parnterLost, setParnterLost] = useState(false);
   const [peerStatus, setPeerStatus] = useState(0); // 1.  searching partner   2.matched  3. peered  -1. idle    -2. lost peer   -3. failed to connect
   // 4. saved itself to database for matching
   // 5. found matched partner and you are master to initialize peer connection
@@ -102,10 +102,16 @@ export default function ChatWindow(props: any) {
 
     peer &&
       peer.on("error", (err: any) => {
+        
         if (show && connected) {
           console.log("error happens : ", err);
           setConnected(false);
-          startMatch();
+          const statusEle: any = document.getElementById("peerStatus");
+          console.log("peer status is , ",statusEle.value)
+          if(statusEle.value !==0){
+            startMatch();
+          }
+       
         }
       });
 
@@ -143,16 +149,21 @@ export default function ChatWindow(props: any) {
   };
 
   const checkPartnerStatus = () => {
+    const statusEle: any = document.getElementById("peerStatus");
+    if(statusEle.value ==0){
+      return;
+    }
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
     if (timePartnerLastEle) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
       if (timePartnerLastEle) {
-        // console.log("time_partner last is , ", lastUpdateTime);
-        // console.log(
-        //   "difference from now is , ",
-        //   getDiffFromNow(lastUpdateTime, "seconds")
-        // );
+        console.log("time_partner last is , ", lastUpdateTime);
+        console.log(
+          "difference from now is , ",
+          getDiffFromNow(lastUpdateTime, "seconds")
+        );
         if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
+          
           setParnterLost(true);
         } else {
           setTimeout(() => {
@@ -165,12 +176,12 @@ export default function ChatWindow(props: any) {
   };
 
   useEffect(() => {
-      if(partnerLost){
+      if(parnterLost){
         resetUser();
         setMatching(true)
         setPeerStatus(1)
       }
-  }, [partnerLost]);
+  }, [parnterLost]);
 
   useEffect(() => {
     if (slaveAnswer) {
