@@ -150,7 +150,7 @@ export default function ChatWindow(props: any) {
 
   const checkPartnerStatus = () => {
     const statusEle: any = document.getElementById("peerStatus");
-    if(statusEle.value ==0){
+    if(statusEle ==null || statusEle.value ==0){
       return;
     }
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
@@ -352,6 +352,13 @@ export default function ChatWindow(props: any) {
   };
   // step 6 : waiting for slave answer
   const waitSlaveAnswer = async () => {
+
+    const statusEle: any = document.getElementById("peerStatus");
+    console.log("peer status is , ",statusEle.value)
+    if(statusEle.value == 0){
+      return;
+    }
+
     const clientToken = await getCookie("clientToken");
     const heartBeatResult = await sendRequest(
       "/api/matching/matchingHeartBeat",

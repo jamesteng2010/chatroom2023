@@ -9,6 +9,7 @@ import { getRandomStr } from "@/utils/strUtil";
 import { getCookie } from "cookies-next";
 import { useState, useContext, useEffect, useCallback } from "react";
 import "../style.css";
+import { io } from "socket.io-client";
 
 export default function Index() {
   const appContext = useContext(AppContext);
@@ -32,6 +33,29 @@ export default function Index() {
       setSignUp(true);
     }
   };
+
+  useEffect(()=>{
+    socketTest()
+    const socket = io("http://localhost:3003");
+    console.log(socket)
+
+    socket.on('connect', function() {
+      console.log('Connected');
+
+      socket.emit('identity', 12, (response:any) =>
+      console.log('Identity:', response),
+    );
+
+    socket.on('events', function(data) {
+      console.log('event', data);
+    });
+
+     
+    });
+  },[])
+  const socketTest = ()=>{
+    console.log("this is socket test...")
+  }
 
   const closeChatWindow = ()=>{
     setShowChatWindow(false)

@@ -4,7 +4,7 @@ import { updateCollection } from "@/utils/mongoDataAPIs";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 // api purpose : get one of  searching users and lock it.
-export default async function api_matchingHeartBeat(
+export default async function api_tellMasterSlaveAnswer(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
