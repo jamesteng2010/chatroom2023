@@ -34,28 +34,6 @@ export default function Index() {
     }
   };
 
-  useEffect(()=>{
-    socketTest()
-    const socket = io("http://localhost:3003");
-    console.log(socket)
-
-    socket.on('connect', function() {
-      console.log('Connected');
-
-      socket.emit('identity', 12, (response:any) =>
-      console.log('Identity:', response),
-    );
-
-    socket.on('events', function(data) {
-      console.log('event', data);
-    });
-
-     
-    });
-  },[])
-  const socketTest = ()=>{
-    console.log("this is socket test...")
-  }
 
   const closeChatWindow = ()=>{
     setShowChatWindow(false)
