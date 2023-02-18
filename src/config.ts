@@ -24,3 +24,8 @@ export enum SOCKET_CMD{
     MASTER_CONFIRM = 2,
     REMOVE_FROM_CHAT = 3
 }
+
+export enum PEER_CMD{
+    I_AM_HERE = '[CMD]:IAMHERE',
+    PARTNER_STOP = '[CMD]:PARTNER_STOP'
+}
