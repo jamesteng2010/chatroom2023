@@ -123,8 +123,8 @@ export default function ChatWindow(props: any) {
   };
 
   const checkPartnerStatus = async () => {
-    console.log("current chat status is , ",chatStatusRef.current)
-    if(chatStatusRef.current !== CHAT_STATUS.CONNECTED){
+    console.log("current chat status is , ",chatStatusRef.current.value)
+    if(parseInt(chatStatusRef.current.value) !== CHAT_STATUS.CONNECTED){
         return;
     }
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
