@@ -1,5 +1,11 @@
 
 export const sendRequest = async (url: any, options: any) => {
+  const modifiedOptions = {
+    ...options, 
+    rejectUnauthorized: false,
+  
+  }
+  console.log("modified options is , ",modifiedOptions)
   const requestResult = await fetch(`${url}`, options);
   //console.log("options is , ", options);
   try {
