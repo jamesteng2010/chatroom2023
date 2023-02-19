@@ -4,8 +4,8 @@ export const GlobalConfig = {
     databaseName : "chatroom",
     clientTokenExpire : 24*60*60*1000,
     backendAPI : {
-        // host : 'http://localhost:3003/',
-        host : 'https://ec2-13-239-4-184.ap-southeast-2.compute.amazonaws.com:3003/'
+        host : 'https://localhost:3003/',
+        // host : 'https://ec2-13-239-4-184.ap-southeast-2.compute.amazonaws.com:3003/'
     }
 }
 

@@ -9,6 +9,7 @@ import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 import { convertUint8ToString, getRandomStr } from "@/utils/strUtil";
 import { io } from "socket.io-client";
 import { CHAT_STATUS, GlobalConfig, PEER_CMD, SOCKET_CMD } from "@/config";
+import StopIcon from '@mui/icons-material/Stop';
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
   const { show, closeChatWindow } = props;
@@ -25,8 +26,22 @@ export default function ChatWindow(props: any) {
   const [peerLastActivity, setPeerLastActivity] = useState(0);
   const chatStatusRef:any = useRef()
 
+
   var remoteVideo: any;
 
+  useEffect(()=>{
+    window.addEventListener('resize',setVideoSize)
+    setVideoSize()
+  },[])
+
+  const setVideoSize = ()=>{
+    setVideoProp({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+  }
+
+ 
   useEffect(() => {
     console.log("use effect in chat window");
     if (show) {
@@ -65,14 +80,11 @@ export default function ChatWindow(props: any) {
   };
 
   const handleSuccess = (stream: any) => {
-    remoteVideo = document.querySelector("#remoteVideo");
-
-    setVideoProp({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-
-    remoteVideo.srcObject = stream;
+    const remoteVideoEle: any = document.getElementById("remoteVideo")
+    if(remoteVideoEle){
+      remoteVideoEle.srcObject = stream
+    }
+  
   };
 
   const closeChat = () => {
@@ -107,7 +119,7 @@ export default function ChatWindow(props: any) {
   }, [chatStatus]);
 
   const keepTellingPartner = async () => {
-    console.log("peer is , ",peer)
+    
     if (peer) {
       try{
         peer.send(PEER_CMD.I_AM_HERE);
@@ -186,6 +198,7 @@ export default function ChatWindow(props: any) {
   }, [socket]);
 
   useEffect(() => {
+  
     if (peer) {
       peer.on("signal", async (offer: any) => {
         console.log(">>>>> signal data is , ", offer);
@@ -218,7 +231,7 @@ export default function ChatWindow(props: any) {
 
       peer.on("data", (data: any) => {
         const receivedStr = convertUint8ToString(data);
-        console.log("receive data from ====>", receivedStr);
+        //console.log("receive data from ====>", receivedStr);
         if (receivedStr == PEER_CMD.I_AM_HERE) {
           setPeerLastActivity(getNow());
         }
@@ -227,21 +240,31 @@ export default function ChatWindow(props: any) {
         }
       });
 
+      peer.on("stream",async(stream:any)=>{
+        console.log("stream is , ",stream)
+        const localVideoEle : any = document.getElementById("localVideo")
+        localVideoEle.srcObject = stream
+        localVideoEle.play();
+
+      })
+
       if (role == "master") {
         socket.on(`${roomName}_masterConfirm`, (slaveAnswer: any) => {
           peer.signal(slaveAnswer);
         });
       }
     }
+
+
   }, [peer, roomName]);
 
   const createMasterPeer = () => {
     console.log(">>>> create peer and signal to slave");
-    setPeer(new Peer({ initiator: true, trickle: false }));
+    setPeer(new Peer({ initiator: true, trickle: false,stream:stream }));
   };
   const createSlavePeer = (masterOffer: any) => {
     console.log(">>>>>> slave got master offer, so create slave side peer");
-    const tempPeer = new Peer({ initiator: false, trickle: false });
+    const tempPeer = new Peer({ initiator: false, trickle: false ,stream : stream});
     setPeer(tempPeer);
     tempPeer.signal(masterOffer);
   };
@@ -275,13 +298,22 @@ export default function ChatWindow(props: any) {
 
   const startMatch = () => {
     setChatStatus(CHAT_STATUS.MATCHING);
+    setLocalVideo()
   };
+  const setLocalVideo = ()=>{
+    const localVideoEle: any = document.getElementById("localVideo")
+    if(localVideoEle ){
+      localVideoEle.srcObject = stream
+      localVideoEle.play();
+    }
+  }
   const stopMatching = async () => {
-
-    
+    const remoteVideoEle: any = document.getElementById("remoteVideo")
+   
     if(chatStatus == CHAT_STATUS.CONNECTED){
       peer.send(PEER_CMD.PARTNER_STOP)
     }
+    remoteVideoEle.srcObject= stream
     
     setChatStatus(CHAT_STATUS.IDEL);
   };
@@ -323,18 +355,26 @@ export default function ChatWindow(props: any) {
             {chatStatus !== CHAT_STATUS.CONNECTED &&
               chatStatus != CHAT_STATUS.IDEL && (
                 <div>
-                  <CircularProgress onClick={stopMatching}></CircularProgress>
+                  <Button onClick={stopMatching}><StopIcon style={{fontSize : '64px',color : 'red'}}></StopIcon></Button>
                 </div>
               )}
           </div>
         </div>
         <div>
-          <video autoPlay id="localVideo" className="localVideo"></video>
+          <video style={{display:chatStatus !=CHAT_STATUS.IDEL?'block':'none'}} autoPlay id="localVideo" className="localVideo"></video>
+          {chatStatus == CHAT_STATUS.MATCHING && <div style={{display:'flex',justifyContent : 'center',alignItems : 'center',width : videoProp.width,height : videoProp.height}}>
+            <CircularProgress></CircularProgress>
+          </div> }
+          {
+         
+          
           <video
-            style={{ width: videoProp.width, height: videoProp.height }}
-            id="remoteVideo"
+
+            style={{ display:chatStatus == CHAT_STATUS.IDEL || chatStatus == CHAT_STATUS.CONNECTED?'hidden':'block', width: videoProp.width, height: videoProp.height }}
+            id="remoteVideo" 
             autoPlay
           ></video>
+}
         </div>
       </div>
 
