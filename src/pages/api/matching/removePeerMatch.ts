@@ -9,20 +9,8 @@ export default async function api_removePeerMatch(
     res: NextApiResponse
   ) {
     const {clientToken} = req.body
-    const url =  `${GlobalConfig.backendAPI.host}removeFromPeerMatch`
-    console.log("removing url is , ",url)
-     const removeResult =  await sendRequest(
-     url,
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          clientToken
-        }),
-      }
-    );
+
+    const removeResult = await deleteOneCollection(GlobalConfig.databaseName,"peerMatch",{$or : [{clientToken : clientToken},{lockedBy : clientToken}]})
+     
     res.status(200).send(removeResult)
   }
