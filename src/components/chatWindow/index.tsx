@@ -9,7 +9,7 @@ import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 import { convertUint8ToString, getRandomStr } from "@/utils/strUtil";
 import { io } from "socket.io-client";
 import { CHAT_STATUS, GlobalConfig, PEER_CMD, SOCKET_CMD } from "@/config";
-import StopIcon from '@mui/icons-material/Stop';
+import StopIcon from "@mui/icons-material/Stop";
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
   const { show, closeChatWindow } = props;
@@ -24,24 +24,22 @@ export default function ChatWindow(props: any) {
   const [role, setRole] = useState("");
   const [peer, setPeer] = useState(null as any);
   const [peerLastActivity, setPeerLastActivity] = useState(0);
-  const chatStatusRef:any = useRef()
-
+  const chatStatusRef: any = useRef();
 
   var remoteVideo: any;
 
-  useEffect(()=>{
-    window.addEventListener('resize',setVideoSize)
-    setVideoSize()
-  },[])
+  useEffect(() => {
+    window.addEventListener("resize", setVideoSize);
+    setVideoSize();
+  }, []);
 
-  const setVideoSize = ()=>{
+  const setVideoSize = () => {
     setVideoProp({
       width: window.innerWidth,
       height: window.innerHeight,
     });
-  }
+  };
 
- 
   useEffect(() => {
     console.log("use effect in chat window");
     if (show) {
@@ -80,11 +78,10 @@ export default function ChatWindow(props: any) {
   };
 
   const handleSuccess = (stream: any) => {
-    const remoteVideoEle: any = document.getElementById("remoteVideo")
-    if(remoteVideoEle){
-      remoteVideoEle.srcObject = stream
+    const remoteVideoEle: any = document.getElementById("remoteVideo");
+    if (remoteVideoEle) {
+      remoteVideoEle.srcObject = stream;
     }
-  
   };
 
   const closeChat = () => {
@@ -93,54 +90,69 @@ export default function ChatWindow(props: any) {
 
   useEffect(() => {
     const clientToken = getCookie("clientToken");
+
     if (chatStatus == CHAT_STATUS.MATCHING) {
+    
       matchPartnerViaSocketServer();
     }
     if (chatStatus == CHAT_STATUS.IDEL) {
-      clearPeerMatch_whenConnected()
+      if (clientToken) {
+        clearPeerMatch_whenConnected();
+      }
       console.log(">>>>>> disconnect from socket server");
       if (socket) {
-     
         socket.disconnect();
         setSocket(null);
       }
       if (peer) {
         console.log("peer also is reset");
-        peer.destroy()
+        peer.destroy();
       }
     }
 
     if (chatStatus == CHAT_STATUS.CONNECTED) {
-     
-      clearPeerMatch_whenConnected()
+      clearPeerMatch_whenConnected();
       keepTellingPartner();
       checkPartnerStatus();
     }
   }, [chatStatus]);
 
   const keepTellingPartner = async () => {
-    
     if (peer) {
-      try{
+      try {
         peer.send(PEER_CMD.I_AM_HERE);
         await sleep(500);
-  
+
         keepTellingPartner();
+      } catch (e) {
+        console.log(e);
       }
-      catch(e){
-        console.log(e)
-      }
-      
     }
+  };
+  const updateMatchingTimeStamp = async () => {
+    if (parseInt(chatStatusRef.current.value) === CHAT_STATUS.CONNECTED) {
+      return;
+    }
+    if(socket){
+      console.log("update matching peer update time")
+      const clientToken = getCookie("clientToken");
+      socket.emit("clientEventListener", {
+        cmd: SOCKET_CMD.UPDATE_MATCHING_TIMESTAMP,
+        clientToken,
+      });
+    }
+  
+    await sleep(500);
+    updateMatchingTimeStamp();
   };
 
   const checkPartnerStatus = async () => {
-    console.log("current chat status is , ",chatStatusRef.current.value)
-    if(parseInt(chatStatusRef.current.value) !== CHAT_STATUS.CONNECTED){
-        return;
+    console.log("current chat status is , ", chatStatusRef.current.value);
+    if (parseInt(chatStatusRef.current.value) !== CHAT_STATUS.CONNECTED) {
+      return;
     }
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
-    console.log("check partner status")
+    console.log("check partner status");
     if (timePartnerLastEle) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
       console.log("time_partner last is , ", lastUpdateTime);
@@ -151,30 +163,28 @@ export default function ChatWindow(props: any) {
       if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
         // if lost connection from partner, peer delete peer and reset itself
 
-      
-        peer.destroy()
-        startMatch()
-
-
-      }
-      else{
-        await sleep(500)
-        checkPartnerStatus()
+        peer.destroy();
+        startMatch();
+      } else {
+        await sleep(500);
+        checkPartnerStatus();
       }
     }
-
-  
-
-
   };
 
   useEffect(() => {
     const clientToken = getCookie("clientToken");
     if (socket) {
+      if(chatStatus == CHAT_STATUS.MATCHING){
+        updateMatchingTimeStamp()
+      }
       socket.on("connect", async () => {
         console.log(">>>>> connected to socket successfully");
       });
-
+      console.log(
+        "set up client token matched event ====>",
+        `${clientToken}_matched`
+      );
       socket.on(`${clientToken}_matched`, async (data: any) => {
         if (clientToken == data.master || clientToken == data.slave) {
           console.log(">>>>> matched, which is ", data);
@@ -195,10 +205,9 @@ export default function ChatWindow(props: any) {
     } else {
       console.log(">>>>>socket is reset");
     }
-  }, [socket]);
+  }, [socket,chatStatus]);
 
   useEffect(() => {
-  
     if (peer) {
       peer.on("signal", async (offer: any) => {
         console.log(">>>>> signal data is , ", offer);
@@ -235,18 +244,17 @@ export default function ChatWindow(props: any) {
         if (receivedStr == PEER_CMD.I_AM_HERE) {
           setPeerLastActivity(getNow());
         }
-        if(receivedStr == PEER_CMD.PARTNER_STOP){
-          startMatch()
+        if (receivedStr == PEER_CMD.PARTNER_STOP) {
+          startMatch();
         }
       });
 
-      peer.on("stream",async(stream:any)=>{
-        console.log("stream is , ",stream)
-        const localVideoEle : any = document.getElementById("localVideo")
-        localVideoEle.srcObject = stream
+      peer.on("stream", async (stream: any) => {
+        console.log("stream is , ", stream);
+        const localVideoEle: any = document.getElementById("localVideo");
+        localVideoEle.srcObject = stream;
         localVideoEle.play();
-
-      })
+      });
 
       if (role == "master") {
         socket.on(`${roomName}_masterConfirm`, (slaveAnswer: any) => {
@@ -254,17 +262,19 @@ export default function ChatWindow(props: any) {
         });
       }
     }
-
-
   }, [peer, roomName]);
 
   const createMasterPeer = () => {
     console.log(">>>> create peer and signal to slave");
-    setPeer(new Peer({ initiator: true, trickle: false,stream:stream }));
+    setPeer(new Peer({ initiator: true, trickle: false, stream: stream }));
   };
   const createSlavePeer = (masterOffer: any) => {
     console.log(">>>>>> slave got master offer, so create slave side peer");
-    const tempPeer = new Peer({ initiator: false, trickle: false ,stream : stream});
+    const tempPeer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream: stream,
+    });
     setPeer(tempPeer);
     tempPeer.signal(masterOffer);
   };
@@ -298,27 +308,27 @@ export default function ChatWindow(props: any) {
 
   const startMatch = () => {
     setChatStatus(CHAT_STATUS.MATCHING);
-    setLocalVideo()
+    setLocalVideo();
   };
-  const setLocalVideo = ()=>{
-    const localVideoEle: any = document.getElementById("localVideo")
-    if(localVideoEle ){
-      localVideoEle.srcObject = stream
+  const setLocalVideo = () => {
+    const localVideoEle: any = document.getElementById("localVideo");
+    if (localVideoEle) {
+      localVideoEle.srcObject = stream;
       localVideoEle.play();
     }
-  }
+  };
   const stopMatching = async () => {
-    const remoteVideoEle: any = document.getElementById("remoteVideo")
-   
-    if(chatStatus == CHAT_STATUS.CONNECTED){
-      peer.send(PEER_CMD.PARTNER_STOP)
+    const remoteVideoEle: any = document.getElementById("remoteVideo");
+
+    if (chatStatus == CHAT_STATUS.CONNECTED) {
+      peer.send(PEER_CMD.PARTNER_STOP);
     }
-    remoteVideoEle.srcObject= stream
-    
+    remoteVideoEle.srcObject = stream;
+
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
-  const clearPeerMatch_whenConnected =async  ()=>{
+  const clearPeerMatch_whenConnected = async () => {
     const clientToken = getCookie("clientToken");
     await sendRequest("/api/matching/removePeerMatch", {
       method: "POST",
@@ -327,10 +337,10 @@ export default function ChatWindow(props: any) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        clientToken
+        clientToken,
       }),
     });
-  }
+  };
   return (
     <Dialog fullScreen open={show} onClose={closeChat}>
       <div style={{ background: "black", overflow: "hidden" }}>
@@ -355,26 +365,52 @@ export default function ChatWindow(props: any) {
             {chatStatus !== CHAT_STATUS.CONNECTED &&
               chatStatus != CHAT_STATUS.IDEL && (
                 <div>
-                  <Button onClick={stopMatching}><StopIcon style={{fontSize : '64px',color : 'red'}}></StopIcon></Button>
+                  <Button onClick={stopMatching}>
+                    <StopIcon
+                      style={{ fontSize: "64px", color: "red" }}
+                    ></StopIcon>
+                  </Button>
                 </div>
               )}
           </div>
         </div>
         <div>
-          <video style={{display:chatStatus !=CHAT_STATUS.IDEL?'block':'none'}} autoPlay id="localVideo" className="localVideo"></video>
-          {chatStatus == CHAT_STATUS.MATCHING && <div style={{display:'flex',justifyContent : 'center',alignItems : 'center',width : videoProp.width,height : videoProp.height}}>
-            <CircularProgress></CircularProgress>
-          </div> }
-          {
-         
-          
           <video
-
-            style={{ display:chatStatus == CHAT_STATUS.IDEL || chatStatus == CHAT_STATUS.CONNECTED?'hidden':'block', width: videoProp.width, height: videoProp.height }}
-            id="remoteVideo" 
+            style={{
+              display: chatStatus != CHAT_STATUS.IDEL ? "block" : "none",
+            }}
             autoPlay
+            id="localVideo"
+            className="localVideo"
           ></video>
-}
+          {chatStatus == CHAT_STATUS.MATCHING && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: videoProp.width,
+                height: videoProp.height,
+              }}
+            >
+              <CircularProgress></CircularProgress>
+            </div>
+          )}
+          {
+            <video
+              style={{
+                display:
+                  chatStatus == CHAT_STATUS.IDEL ||
+                  chatStatus == CHAT_STATUS.CONNECTED
+                    ? "hidden"
+                    : "block",
+                width: videoProp.width,
+                height: videoProp.height,
+              }}
+              id="remoteVideo"
+              autoPlay
+            ></video>
+          }
         </div>
       </div>
 

@@ -22,7 +22,8 @@ export enum SOCKET_CMD{
     MASTER_SIGNAL = 0,
     SLAVE_ANSWER = 1,
     MASTER_CONFIRM = 2,
-    REMOVE_FROM_CHAT = 3
+    REMOVE_FROM_CHAT = 3,
+    UPDATE_MATCHING_TIMESTAMP = 4,
 }
 
 export enum PEER_CMD{
