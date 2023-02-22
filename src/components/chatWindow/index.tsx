@@ -346,7 +346,7 @@ export default function ChatWindow(props: any) {
       peer.send(PEER_CMD.PARTNER_STOP);
     }
     remoteVideoEle.srcObject = localStream;
-
+    setRemoteStream(null)
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
