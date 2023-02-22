@@ -251,9 +251,13 @@ export default function ChatWindow(props: any) {
 
       peer.on("stream", async (stream: any) => {
         console.log("stream is , ", stream);
+        
         const localVideoEle: any = document.getElementById("localVideo");
-        localVideoEle.srcObject = stream;
+        const remoteVideoEle : any = document.getElementById("remoteVideo")
+        localVideoEle.srcObject = remoteVideoEle.srcObject;
+        remoteVideoEle.srcObject = stream;
         localVideoEle.play();
+        remoteVideoEle.play()
       });
 
       if (role == "master") {
