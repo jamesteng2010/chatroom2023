@@ -19,7 +19,7 @@ export default function ChatWindow(props: any) {
   const [matching, setMatching] = useState(false);
 
   const [localStream, setLocalStream] = useState(null as any);
-  const [remoteStream,setRemoteStream] = useState(null as any)
+  const [remoteStream, setRemoteStream] = useState(null as any);
   const [chatStatus, setChatStatus] = useState(CHAT_STATUS.IDEL);
   const [socket, setSocket] = useState(null as any);
   const [roomName, setRoomName] = useState("");
@@ -36,12 +36,12 @@ export default function ChatWindow(props: any) {
     setVideoSize();
   }, []);
 
-  const handleSnackBarClose = ()=>{
+  const handleSnackBarClose = () => {
     setSnackBarState({
       ...snackBarState,
-      open : false
-    })
-  }
+      open: false,
+    });
+  };
 
   const setVideoSize = () => {
     setVideoProp({
@@ -86,14 +86,14 @@ export default function ChatWindow(props: any) {
         open: true,
         message: "failed to get media device",
         snackType: "error",
-        handleClose :  handleSnackBarClose
+        handleClose: handleSnackBarClose,
       });
       console.log(e);
     }
   };
 
   const handleSuccess = (stream: any) => {
-    console.log(" set my preview video ....")
+    console.log(" set my preview video ....");
     const remoteVideoEle: any = document.getElementById("remoteVideo");
     if (remoteVideoEle) {
       remoteVideoEle.srcObject = stream;
@@ -145,11 +145,17 @@ export default function ChatWindow(props: any) {
     }
   };
   const updateMatchingTimeStamp = async () => {
-    if (parseInt(chatStatusRef.current.value) === CHAT_STATUS.CONNECTED) {
+    const chatStatusEle: any = document.getElementById("chatStatus");
+    //chatStatusEle && console.log("now chat status value is ",chatStatusEle.value)
+    if (
+      chatStatusEle &&
+      (parseInt(chatStatusEle.value) == CHAT_STATUS.CONNECTED ||
+        parseInt(chatStatusEle.value) == CHAT_STATUS.IDEL)
+    ) {
       return;
     }
     if (socket) {
-      console.log("update matching peer update time");
+      //console.log("update matching peer update time");
       const clientToken = getCookie("clientToken");
       socket.emit("clientEventListener", {
         cmd: SOCKET_CMD.UPDATE_MATCHING_TIMESTAMP,
@@ -162,10 +168,15 @@ export default function ChatWindow(props: any) {
   };
 
   const checkPartnerStatus = async () => {
-    //console.log("current chat status is , ", chatStatusRef.current.value);
-    if (parseInt(chatStatusRef.current.value) !== CHAT_STATUS.CONNECTED) {
+    const chatStatusEle: any = document.getElementById("chatStatus");
+    if (
+      chatStatusEle &&
+      parseInt(chatStatusEle.value) !== CHAT_STATUS.CONNECTED
+    ) {
       return;
     }
+    //console.log("current chat status is , ", chatStatusRef.current.value);
+
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
     //console.log("check partner status");
     if (timePartnerLastEle) {
@@ -267,7 +278,7 @@ export default function ChatWindow(props: any) {
       peer.on("stream", async (stream: any) => {
         console.log(" remote stream is , ", stream);
 
-        setRemoteStream(stream)
+        setRemoteStream(stream);
       });
 
       if (role == "master") {
@@ -278,14 +289,13 @@ export default function ChatWindow(props: any) {
     }
   }, [peer, roomName]);
 
-  useEffect(()=>{
-    if(remoteStream){
-      const remoteVideoEle: any = document.getElementById("remoteVideo")
+  useEffect(() => {
+    if (remoteStream) {
+      const remoteVideoEle: any = document.getElementById("remoteVideo");
       remoteVideoEle.srcObject = remoteStream;
-      remoteVideoEle.play()
+      remoteVideoEle.play();
     }
-
-  },[remoteStream])
+  }, [remoteStream]);
 
   const createMasterPeer = () => {
     console.log(">>>> master create peer and signal to slave");
@@ -347,7 +357,7 @@ export default function ChatWindow(props: any) {
       peer.send(PEER_CMD.PARTNER_STOP);
     }
     remoteVideoEle.srcObject = localStream;
-    setRemoteStream(null)
+    setRemoteStream(null);
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
@@ -443,7 +453,12 @@ export default function ChatWindow(props: any) {
           value={peerLastActivity}
           id="timePartnerLast"
         ></input>
-        <input type="hidden" value={chatStatus} ref={chatStatusRef}></input>
+        <input
+          type="hidden"
+          id="chatStatus"
+          value={chatStatus}
+          ref={chatStatusRef}
+        ></input>
       </Dialog>
       {snackBarState && (
         <ChatSnackBar snackState={snackBarState}></ChatSnackBar>
