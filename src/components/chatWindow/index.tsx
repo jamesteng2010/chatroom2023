@@ -93,6 +93,7 @@ export default function ChatWindow(props: any) {
   };
 
   const handleSuccess = (stream: any) => {
+    console.log(" set my preview video ....")
     const remoteVideoEle: any = document.getElementById("remoteVideo");
     if (remoteVideoEle) {
       remoteVideoEle.srcObject = stream;
@@ -161,19 +162,19 @@ export default function ChatWindow(props: any) {
   };
 
   const checkPartnerStatus = async () => {
-    console.log("current chat status is , ", chatStatusRef.current.value);
+    //console.log("current chat status is , ", chatStatusRef.current.value);
     if (parseInt(chatStatusRef.current.value) !== CHAT_STATUS.CONNECTED) {
       return;
     }
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
-    console.log("check partner status");
+    //console.log("check partner status");
     if (timePartnerLastEle) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
-      console.log("time_partner last is , ", lastUpdateTime);
-      console.log(
-        "difference from now is , ",
-        getDiffFromNow(lastUpdateTime, "seconds")
-      );
+      //console.log("time_partner last is , ", lastUpdateTime);
+      // console.log(
+      //   "difference from now is , ",
+      //   getDiffFromNow(lastUpdateTime, "seconds")
+      // );
       if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
         // if lost connection from partner, peer delete peer and reset itself
 
