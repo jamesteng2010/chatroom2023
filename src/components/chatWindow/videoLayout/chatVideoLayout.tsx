@@ -10,32 +10,31 @@ export default function ChatVideoLayout(props: any) {
   useEffect(()=>{
     console.log("now the chat status is , ",chatStatus)
     if(chatStatus == CHAT_STATUS.MATCHING){
-      setLocalVideowhenMatching()
+      setVideoStream("localVideo",localStream)
+      
     }
     if(chatStatus == CHAT_STATUS.IDEL){
-        setLocalVideoWhenIdle()
+        setVideoStream("remoteVideo",localStream)
+       
     }
     if(chatStatus == CHAT_STATUS.CONNECTED){
-        setLocalVideoWhenIdle()
-        setLocalVideowhenMatching()
+        setVideoStream("localVideo",localStream)
+        setVideoStream("remoteVideo",remoteStream);
+      
     }
   },[chatStatus,localStream,remoteStream])
 
-  const setLocalVideowhenMatching = ()=>{
-    const localVidelEle: any = document.getElementById("localVideo");
-    if (localVidelEle) {
-      localVidelEle.srcObject = localStream;
+  const setVideoStream = (videoEleName:string,stream:any)=>{
+    console.log(`set video stream for ${videoEleName}, its stream is ${stream}` )
+    const videoEle :any = document.getElementById(videoEleName)
+    if(videoEle){
+      videoEle.srcObject = stream
     }
-      console.log("when matching set  local stream.....",localStream)
+    videoEle.play()
   }
 
-  const setLocalVideoWhenIdle = ()=>{
-    const remoteVideoEle: any = document.getElementById("remoteVideo");
-    if (remoteVideoEle) {
-      remoteVideoEle.srcObject = localStream;
-    }
-      console.log("get local stream.....",localStream)
-  }
+
+
   return (
     <>
       <ChatVideoControl

@@ -386,6 +386,7 @@ export default function ChatWindow(props: any) {
             startMatch={startMatch}
             videoProp={videoProp}
             localStream ={localStream}
+            remoteStream={remoteStream}
           ></ChatVideoLayout>
         </div>
 
