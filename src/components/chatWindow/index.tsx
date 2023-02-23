@@ -11,6 +11,7 @@ import { io } from "socket.io-client";
 import { CHAT_STATUS, GlobalConfig, PEER_CMD, SOCKET_CMD } from "@/config";
 import StopIcon from "@mui/icons-material/Stop";
 import ChatSnackBar from "../ui/snackbar";
+import ChatVideoLayout from "./videoLayout/chatVideoLayout";
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
   const { show, closeChatWindow } = props;
@@ -29,7 +30,7 @@ export default function ChatWindow(props: any) {
   const chatStatusRef: any = useRef();
   const [snackBarState, setSnackBarState] = useState(null as any);
 
-  var remoteVideo: any;
+
 
   useEffect(() => {
     window.addEventListener("resize", setVideoSize);
@@ -54,9 +55,9 @@ export default function ChatWindow(props: any) {
     console.log("use effect in chat window");
     if (show) {
       console.log("start to initialize the preview ");
-      setTimeout(() => {
+   
         showPreview();
-      }, 1000);
+     
     } else {
       if (localStream) {
         localStream.getTracks().forEach(function (track: any) {
@@ -79,7 +80,7 @@ export default function ChatWindow(props: any) {
         constraints
       );
 
-      handleSuccess(tempLocalStream);
+      // handleSuccess(tempLocalStream);
       setLocalStream(tempLocalStream);
     } catch (e) {
       setSnackBarState({
@@ -92,15 +93,14 @@ export default function ChatWindow(props: any) {
     }
   };
 
-  const handleSuccess = (stream: any) => {
-    console.log(" set my preview video ....");
-    const remoteVideoEle: any = document.getElementById("remoteVideo");
-    if (remoteVideoEle) {
-      remoteVideoEle.srcObject = stream;
-    }
-  };
 
   const closeChat = () => {
+    if (
+      chatStatus == CHAT_STATUS.CONNECTED ||
+      chatStatus == CHAT_STATUS.MATCHING
+    ) {
+      stopMatching();
+    }
     closeChatWindow && closeChatWindow();
   };
 
@@ -289,13 +289,7 @@ export default function ChatWindow(props: any) {
     }
   }, [peer, roomName]);
 
-  useEffect(() => {
-    if (remoteStream) {
-      const remoteVideoEle: any = document.getElementById("remoteVideo");
-      remoteVideoEle.srcObject = remoteStream;
-      remoteVideoEle.play();
-    }
-  }, [remoteStream]);
+
 
   const createMasterPeer = () => {
     console.log(">>>> master create peer and signal to slave");
@@ -333,10 +327,19 @@ export default function ChatWindow(props: any) {
     );
     console.log(createOfferResult);
     console.log(">>>>>>connecting to socket server");
-    const tempSocket = io(GlobalConfig.backendAPI.host);
-    setSocket(tempSocket);
-
-    tempSocket.emit("matching_chat_partner", { clientToken });
+    if (socket == null) {
+      console.log(
+        ">>>>> setup socket and emit server with client token >>>>>>"
+      );
+      const tempSocket = io(GlobalConfig.backendAPI.host);
+      setSocket(tempSocket);
+      tempSocket.emit("matching_chat_partner", { clientToken });
+    } else {
+      console.log(
+        ">>>> socket is there , so tell server you want to find a peer "
+      );
+      socket.emit("matching_chat_partner", { clientToken });
+    }
   };
 
   const startMatch = () => {
@@ -345,19 +348,14 @@ export default function ChatWindow(props: any) {
   };
   const setLocalVideo = () => {
     const localVideoEle: any = document.getElementById("localVideo");
+    console.log("local video is , ",localVideoEle)
     if (localVideoEle) {
       localVideoEle.srcObject = localStream;
       localVideoEle.play();
     }
   };
   const stopMatching = async () => {
-    const remoteVideoEle: any = document.getElementById("remoteVideo");
 
-    if (chatStatus == CHAT_STATUS.CONNECTED) {
-      peer.send(PEER_CMD.PARTNER_STOP);
-    }
-    remoteVideoEle.srcObject = localStream;
-    setRemoteStream(null);
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
@@ -381,71 +379,14 @@ export default function ChatWindow(props: any) {
           <div className="closeIcon" onClick={closeChat}>
             <CloseIcon></CloseIcon>
           </div>
-          <div className="videoControl">
-            <div
-              className="searchIcon"
-              style={{ background: matching ? "red" : "white" }}
-            >
-              {chatStatus == CHAT_STATUS.CONNECTED && (
-                <Button onClick={stopMatching}>Stop</Button>
-              )}
-              {chatStatus == CHAT_STATUS.IDEL && (
-                <SearchIcon
-                  onClick={startMatch}
-                  style={{ fontSize: 58 }}
-                ></SearchIcon>
-              )}
 
-              {chatStatus !== CHAT_STATUS.CONNECTED &&
-                chatStatus != CHAT_STATUS.IDEL && (
-                  <div>
-                    <Button onClick={stopMatching}>
-                      <StopIcon
-                        style={{ fontSize: "64px", color: "red" }}
-                      ></StopIcon>
-                    </Button>
-                  </div>
-                )}
-            </div>
-          </div>
-          <div>
-            <video
-              style={{
-                display: chatStatus != CHAT_STATUS.IDEL ? "block" : "none",
-              }}
-              autoPlay
-              id="localVideo"
-              className="localVideo"
-            ></video>
-            {chatStatus == CHAT_STATUS.MATCHING && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: videoProp.width,
-                  height: videoProp.height,
-                }}
-              >
-                <CircularProgress></CircularProgress>
-              </div>
-            )}
-            {
-              <video
-                style={{
-                  display:
-                    chatStatus == CHAT_STATUS.IDEL ||
-                    chatStatus == CHAT_STATUS.CONNECTED
-                      ? "hidden"
-                      : "block",
-                  width: videoProp.width,
-                  height: videoProp.height,
-                }}
-                id="remoteVideo"
-                autoPlay
-              ></video>
-            }
-          </div>
+          <ChatVideoLayout
+            chatStatus={chatStatus}
+            stopMatching={stopMatching}
+            startMatch={startMatch}
+            videoProp={videoProp}
+            localStream ={localStream}
+          ></ChatVideoLayout>
         </div>
 
         <input
