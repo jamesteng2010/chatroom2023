@@ -13,6 +13,15 @@ export default async function api_insertSearchingPeer(
     
     const insertURL = `${GlobalConfig.backendAPI.host}insertSearchMate`
     console.log("insert url is , ",insertURL)
-    const insertResult = await insertOneDoc(GlobalConfig.databaseName,"peerMatch",mate)
+    const insertResult = await sendRequest(insertURL,{
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...mate
+      }),
+    }) 
     res.status(200).send(insertResult)
 }

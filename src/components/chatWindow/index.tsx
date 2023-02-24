@@ -30,8 +30,6 @@ export default function ChatWindow(props: any) {
   const chatStatusRef: any = useRef();
   const [snackBarState, setSnackBarState] = useState(null as any);
 
-
-
   useEffect(() => {
     window.addEventListener("resize", setVideoSize);
     setVideoSize();
@@ -55,9 +53,8 @@ export default function ChatWindow(props: any) {
     console.log("use effect in chat window");
     if (show) {
       console.log("start to initialize the preview ");
-   
-        showPreview();
-     
+
+      showPreview();
     } else {
       if (localStream) {
         localStream.getTracks().forEach(function (track: any) {
@@ -92,7 +89,6 @@ export default function ChatWindow(props: any) {
       console.log(e);
     }
   };
-
 
   const closeChat = () => {
     if (
@@ -154,13 +150,23 @@ export default function ChatWindow(props: any) {
     ) {
       return;
     }
+
     if (socket) {
+    
       //console.log("update matching peer update time");
       const clientToken = getCookie("clientToken");
-      socket.emit("clientEventListener", {
-        cmd: SOCKET_CMD.UPDATE_MATCHING_TIMESTAMP,
-        clientToken,
-      });
+      try{
+        socket.emit("clientEventListener", {
+          cmd: SOCKET_CMD.UPDATE_MATCHING_TIMESTAMP,
+          clientToken,
+        },(err:any)=>{
+          console.log(err)
+        });
+      }
+      catch(e){
+        console.log("connec to socket failed")
+      }
+      
     }
 
     await sleep(500);
@@ -175,20 +181,12 @@ export default function ChatWindow(props: any) {
     ) {
       return;
     }
-    //console.log("current chat status is , ", chatStatusRef.current.value);
 
     const timePartnerLastEle: any = document.getElementById("timePartnerLast");
-    //console.log("check partner status");
     if (timePartnerLastEle) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
-      //console.log("time_partner last is , ", lastUpdateTime);
-      // console.log(
-      //   "difference from now is , ",
-      //   getDiffFromNow(lastUpdateTime, "seconds")
-      // );
-      if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
-        // if lost connection from partner, peer delete peer and reset itself
 
+      if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
         peer.destroy();
         startMatch();
       } else {
@@ -274,7 +272,9 @@ export default function ChatWindow(props: any) {
           startMatch();
         }
       });
-
+      peer.on("close", async () => {
+        console.log("peer closed!!!, its role is , ", role);
+      });
       peer.on("stream", async (stream: any) => {
         console.log(" remote stream is , ", stream);
 
@@ -289,8 +289,6 @@ export default function ChatWindow(props: any) {
     }
   }, [peer, roomName]);
 
-
-
   const createMasterPeer = () => {
     console.log(">>>> master create peer and signal to slave");
     setPeer(new Peer({ initiator: true, trickle: false, stream: localStream }));
@@ -299,10 +297,12 @@ export default function ChatWindow(props: any) {
     console.log(">>>>>> slave got master offer, so create slave side peer");
     const tempPeer = new Peer({
       initiator: false,
-      trickle: false
+      trickle: false,
     });
-    console.log(">>>>>>slave add local stream to peer and  send stream to  partner")
-    tempPeer.addStream(localStream)
+    console.log(
+      ">>>>>>slave add local stream to peer and  send stream to  partner"
+    );
+    tempPeer.addStream(localStream);
     setPeer(tempPeer);
     tempPeer.signal(masterOffer);
   };
@@ -328,27 +328,17 @@ export default function ChatWindow(props: any) {
     );
     console.log(createOfferResult);
     console.log(">>>>>>connecting to socket server");
-    if (socket == null) {
-      console.log(
-        ">>>>> setup socket and emit server with client token >>>>>>"
-      );
-      const tempSocket = io(GlobalConfig.backendAPI.host);
-      setSocket(tempSocket);
-      tempSocket.emit("matching_chat_partner", { clientToken });
-    } else {
-      console.log(
-        ">>>> socket is there , so tell server you want to find a peer "
-      );
-      socket.emit("matching_chat_partner", { clientToken });
-    }
+
+    console.log(">>>>> setup socket and emit server with client token >>>>>>");
+    const tempSocket = io(GlobalConfig.backendAPI.host);
+    setSocket(tempSocket);
+    tempSocket.emit("matching_chat_partner", { clientToken });
   };
 
   const startMatch = () => {
     setChatStatus(CHAT_STATUS.MATCHING);
-
   };
   const stopMatching = async () => {
-
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
@@ -378,7 +368,7 @@ export default function ChatWindow(props: any) {
             stopMatching={stopMatching}
             startMatch={startMatch}
             videoProp={videoProp}
-            localStream ={localStream}
+            localStream={localStream}
             remoteStream={remoteStream}
           ></ChatVideoLayout>
         </div>

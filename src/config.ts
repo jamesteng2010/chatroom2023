@@ -4,7 +4,7 @@ export const GlobalConfig = {
     databaseName : "chatroom",
     clientTokenExpire : 24*60*60*1000,
     backendAPI : {
-        // host : 'https://localhost:3003/',
+        // host : 'http://localhost:3003/',
         host : 'https://www.backendapi.store:3003/'
     }
 }
