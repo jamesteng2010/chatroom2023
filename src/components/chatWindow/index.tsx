@@ -9,7 +9,7 @@ import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 import { convertUint8ToString, getRandomStr } from "@/utils/strUtil";
 import { io } from "socket.io-client";
 import { CHAT_STATUS, GlobalConfig, PEER_CMD, SOCKET_CMD } from "@/config";
-import StopIcon from "@mui/icons-material/Stop";
+
 import ChatSnackBar from "../ui/snackbar";
 import ChatVideoLayout from "./videoLayout/chatVideoLayout";
 var Peer = require("simple-peer");
@@ -126,6 +126,7 @@ export default function ChatWindow(props: any) {
     }
 
     if (chatStatus == CHAT_STATUS.CONNECTED) {
+      peer.addStream(localStream)
       clearPeerMatch_whenConnected();
       keepTellingPartner();
       checkPartnerStatus();
@@ -300,7 +301,7 @@ export default function ChatWindow(props: any) {
     const tempPeer = new Peer({
       initiator: false,
       trickle: false,
-      stream: localStream,
+     
     });
     setPeer(tempPeer);
     tempPeer.signal(masterOffer);
@@ -344,15 +345,7 @@ export default function ChatWindow(props: any) {
 
   const startMatch = () => {
     setChatStatus(CHAT_STATUS.MATCHING);
-    setLocalVideo();
-  };
-  const setLocalVideo = () => {
-    const localVideoEle: any = document.getElementById("localVideo");
-    console.log("local video is , ",localVideoEle)
-    if (localVideoEle) {
-      localVideoEle.srcObject = localStream;
-      localVideoEle.play();
-    }
+
   };
   const stopMatching = async () => {
 
