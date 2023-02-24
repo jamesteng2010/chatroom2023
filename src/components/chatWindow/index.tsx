@@ -126,7 +126,6 @@ export default function ChatWindow(props: any) {
     }
 
     if (chatStatus == CHAT_STATUS.CONNECTED) {
-      peer.addStream(localStream)
       clearPeerMatch_whenConnected();
       keepTellingPartner();
       checkPartnerStatus();
@@ -300,9 +299,10 @@ export default function ChatWindow(props: any) {
     console.log(">>>>>> slave got master offer, so create slave side peer");
     const tempPeer = new Peer({
       initiator: false,
-      trickle: false,
-     
+      trickle: false
     });
+    console.log(">>>>>>slave add local stream to peer and  send stream to  partner")
+    tempPeer.addStream(localStream)
     setPeer(tempPeer);
     tempPeer.signal(masterOffer);
   };

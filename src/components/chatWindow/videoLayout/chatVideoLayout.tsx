@@ -30,7 +30,7 @@ export default function ChatVideoLayout(props: any) {
     if(videoEle){
       videoEle.srcObject = stream
     }
-    videoEle.play()
+    // videoEle.play()
   }
 
 
