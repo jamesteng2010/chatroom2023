@@ -51,11 +51,9 @@ export default function ChatWindow(props: any) {
   };
 
   const setVideoSize = () => {
-    const win_width = window.innerWidth
-    const win_height = window.innerHeight
     setVideoProp({
-      width: win_width>win_height?'auto' :win_width,
-      height: win_width>win_height? win_height : 'auto' ,
+      width: window.innerWidth,
+      height: window.innerHeight,
     });
   };
 
