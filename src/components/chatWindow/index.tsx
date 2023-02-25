@@ -1,5 +1,5 @@
 import Dialog from "@mui/material/Dialog";
-import { useRef, useEffect, useState,useContext } from "react";
+import { useRef, useEffect, useState, useContext } from "react";
 import { Button, CircularProgress, Fab } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -15,8 +15,8 @@ import ChatVideoLayout from "./videoLayout/chatVideoLayout";
 import AppContext from "@/context/userDataContext";
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
-  const appContext = useContext(AppContext)
-  const {appInFore} = appContext
+  const appContext = useContext(AppContext);
+  const { appInFore } = appContext;
   const { show, closeChatWindow } = props;
 
   const [videoProp, setVideoProp] = useState({ width: 0, height: 0 });
@@ -38,10 +38,10 @@ export default function ChatWindow(props: any) {
     setVideoSize();
   }, []);
 
-  useEffect(()=>{
-    console.log("app in fore, ",appInFore)
-    stopMatching()
-  },[appInFore])
+  useEffect(() => {
+    console.log("app in fore, ", appInFore);
+    stopMatching();
+  }, [appInFore]);
 
   const handleSnackBarClose = () => {
     setSnackBarState({
@@ -75,8 +75,11 @@ export default function ChatWindow(props: any) {
   }, [show]);
 
   const constraints = {
-    audio:  true,
+    audio: true,
     video: true,
+    width: { ideal: 4096 },
+    height: { ideal: 2160 },
+    facingMode: "environment"
   };
 
   const showPreview = async () => {
@@ -160,21 +163,22 @@ export default function ChatWindow(props: any) {
     }
 
     if (socket) {
-    
       //console.log("update matching peer update time");
       const clientToken = getCookie("clientToken");
-      try{
-        socket.emit("clientEventListener", {
-          cmd: SOCKET_CMD.UPDATE_MATCHING_TIMESTAMP,
-          clientToken,
-        },(err:any)=>{
-          console.log(err)
-        });
+      try {
+        socket.emit(
+          "clientEventListener",
+          {
+            cmd: SOCKET_CMD.UPDATE_MATCHING_TIMESTAMP,
+            clientToken,
+          },
+          (err: any) => {
+            console.log(err);
+          }
+        );
+      } catch (e) {
+        console.log("connec to socket failed");
       }
-      catch(e){
-        console.log("connec to socket failed")
-      }
-      
     }
 
     await sleep(500);
