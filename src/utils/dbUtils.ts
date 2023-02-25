@@ -11,7 +11,7 @@ export const generateVerifyCode = async (identityNumber : any)=>{
 
     console.log("find code is , ",foundVerifyCode)
     
-    if(!foundVerifyCode){
+    if(!foundVerifyCode || foundVerifyCode.error){
 
         const verifyCode =  getRandomCode();
         await insertOneDoc(GlobalConfig.databaseName,"verify_code",{mobile : identityNumber,code :verifyCode ,used : false,createdTime : getNow()})

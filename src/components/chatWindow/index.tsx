@@ -1,5 +1,5 @@
 import Dialog from "@mui/material/Dialog";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState,useContext } from "react";
 import { Button, CircularProgress, Fab } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -12,8 +12,11 @@ import { CHAT_STATUS, GlobalConfig, PEER_CMD, SOCKET_CMD } from "@/config";
 
 import ChatSnackBar from "../ui/snackbar";
 import ChatVideoLayout from "./videoLayout/chatVideoLayout";
+import AppContext from "@/context/userDataContext";
 var Peer = require("simple-peer");
 export default function ChatWindow(props: any) {
+  const appContext = useContext(AppContext)
+  const {appInFore} = appContext
   const { show, closeChatWindow } = props;
 
   const [videoProp, setVideoProp] = useState({ width: 0, height: 0 });
@@ -34,6 +37,11 @@ export default function ChatWindow(props: any) {
     window.addEventListener("resize", setVideoSize);
     setVideoSize();
   }, []);
+
+  useEffect(()=>{
+    console.log("app in fore, ",appInFore)
+    stopMatching()
+  },[appInFore])
 
   const handleSnackBarClose = () => {
     setSnackBarState({

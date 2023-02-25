@@ -1,5 +1,6 @@
 
 export const sendRequest = async (url: any, options: any) => {
+  console.log("request url is, ",url)
   const modifiedOptions = {
     ...options, 
     rejectUnauthorized: false,

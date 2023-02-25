@@ -69,7 +69,7 @@ export const findOneCollection = async (
   filter: any,
   projection? : any
 ) => {
-  const returnResult = await sendRequest(`${GlobalConfig.mongoDataAPI}findOne`, {
+  const returnResult = await sendRequest(`${GlobalConfig.backendAPI.host}findOneCollection`, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -78,8 +78,12 @@ export const findOneCollection = async (
       projection : {...projection,"_id":0}
     }),
   });
-  if(returnResult){
-    return returnResult.document
+  console.log(returnResult)
+  if(!returnResult.error){
+    return returnResult
+  }
+  else{
+    return null
   }
 };
 
@@ -89,7 +93,7 @@ export const updateCollection = async (
   filter: any,
   updatedValues: any
 ) => {
-  return sendRequest(`${GlobalConfig.mongoDataAPI}updateOne`, {
+  return sendRequest(`${GlobalConfig.backendAPI.host}updateOneCollection`, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -107,7 +111,7 @@ export const insertOneDoc = async (
   collection: string,
   document: any
 ) => {
-  return sendRequest(`${GlobalConfig.mongoDataAPI}insertOne`, {
+  return sendRequest(`${GlobalConfig.backendAPI.host}insertOneCollection`, {
     method: "POST",
     headers,
     body: JSON.stringify({

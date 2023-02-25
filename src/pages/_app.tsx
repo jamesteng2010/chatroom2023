@@ -19,6 +19,8 @@ export default function Index() {
   const [randomKey, setRandomKey] = useState("");
   const [signUp, setSignUp] = useState(false);
   const [signUpStep, setSignUpStep] = useState(1);
+  const [appInFore,setAppInFore] = useState(true)
+
   const closeSignUp = (event: any, reason: any) => {
     if (reason && reason == "backdropClick") {
       return;
@@ -34,6 +36,13 @@ export default function Index() {
     }
   };
 
+  useEffect(()=>{
+    window.addEventListener("visibilitychange",(event:any)=>{
+      
+      setAppInFore(document.visibilityState === "visible")
+      
+    })
+  },[])
 
   const closeChatWindow = ()=>{
     setShowChatWindow(false)
@@ -47,6 +56,7 @@ export default function Index() {
         loadingUserData,
         setLoadingUserData,
         setSignUpStep,
+        appInFore
       }}
     >
       <SiteLayout loginClick={() => setSignUp(true)}>
