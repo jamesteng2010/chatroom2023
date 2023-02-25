@@ -45,6 +45,7 @@ export default function ChatVideoLayout(props: any) {
       {chatStatus == CHAT_STATUS.IDEL && (
         <div>
           <video
+            muted
             style={{
               width: videoProp.width,
               height: videoProp.height,
@@ -58,7 +59,7 @@ export default function ChatVideoLayout(props: any) {
 
       {chatStatus == CHAT_STATUS.MATCHING && (
         <>
-          <video autoPlay id="localVideo" className="localVideo"></video>
+          <video autoPlay id="localVideo" muted className="localVideo"></video>
 
           <div
             style={{
@@ -76,7 +77,7 @@ export default function ChatVideoLayout(props: any) {
 
       {
         chatStatus == CHAT_STATUS.CONNECTED &&  <>
-           <video autoPlay id="localVideo" className="localVideo"></video>
+           <video muted autoPlay id="localVideo" className="localVideo"></video>
 
            <video
             style={{

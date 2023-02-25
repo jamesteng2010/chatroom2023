@@ -75,7 +75,7 @@ export default function ChatWindow(props: any) {
   }, [show]);
 
   const constraints = {
-    audio: false,
+    audio:  true,
     video: true,
   };
 
