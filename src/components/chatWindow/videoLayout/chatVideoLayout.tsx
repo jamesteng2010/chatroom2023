@@ -2,11 +2,14 @@ import { CHAT_STATUS } from "@/config";
 import ChatVideoControl from "./chatVideoControl";
 import { CircularProgress } from "@mui/material";
 import { useRef, useEffect, useState } from "react";
+import useMediaQuery from "@mui/material/useMediaQuery";
+
 
 export default function ChatVideoLayout(props: any) {
+  const largeScreen = useMediaQuery("(min-width:600px)");
   const { chatStatus, videoProp, stopMatching, startMatch,localStream,remoteStream } = props;
  
-
+  const [localVideoPos,setLocalVideoPos] = useState([0,0])
   useEffect(()=>{
     console.log("now the chat status is , ",chatStatus)
     if(chatStatus == CHAT_STATUS.MATCHING){
@@ -35,6 +38,7 @@ export default function ChatVideoLayout(props: any) {
 
 
 
+
   return (
     <>
       <ChatVideoControl
@@ -59,7 +63,7 @@ export default function ChatVideoLayout(props: any) {
 
       {chatStatus == CHAT_STATUS.MATCHING && (
         <>
-          <video autoPlay id="localVideo" muted className="localVideo"></video>
+          <video  autoPlay id="localVideo" style={{width:largeScreen?200:100}} muted className="localVideo"></video>
 
           <div
             style={{
@@ -77,7 +81,7 @@ export default function ChatVideoLayout(props: any) {
 
       {
         chatStatus == CHAT_STATUS.CONNECTED &&  <>
-           <video muted autoPlay id="localVideo" className="localVideo"></video>
+          <video className="localVideo" style={{width:largeScreen?200:100}}  muted autoPlay id="localVideo"></video>
 
            <video
             style={{
