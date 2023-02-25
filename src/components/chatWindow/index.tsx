@@ -19,7 +19,7 @@ export default function ChatWindow(props: any) {
   const { appInFore } = appContext;
   const { show, closeChatWindow } = props;
 
-  const [videoProp, setVideoProp] = useState({ width: 0, height: 0 });
+  const [videoProp, setVideoProp] = useState({ width: 'auto' as any, height: 'auto' as any });
   const [matching, setMatching] = useState(false);
 
   const [localStream, setLocalStream] = useState(null as any);
@@ -51,9 +51,11 @@ export default function ChatWindow(props: any) {
   };
 
   const setVideoSize = () => {
+    const win_width = window.innerWidth
+    const win_height = window.innerHeight
     setVideoProp({
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: win_width>win_height?'auto' :win_width,
+      height: win_width>win_height? win_height : 'auto' ,
     });
   };
 
@@ -84,6 +86,9 @@ export default function ChatWindow(props: any) {
 
   const showPreview = async () => {
     try {
+      const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+      console.log("support constraints is : ")
+      console.log(supportedConstraints)
       const tempLocalStream: any = await navigator.mediaDevices.getUserMedia(
         constraints
       );
