@@ -8,6 +8,9 @@ import "react-slideshow-image/dist/styles.css";
 import DuoIcon from '@mui/icons-material/Duo';
 import SignUp from "./signup";
 import { useState } from "react";
+import {useContext,useEffect} from 'react'
+import AppContext from "@/context/userDataContext";
+import CircularProgress from "@mui/material/CircularProgress";
 
 export default function HomePage(props:any) {
     const {startVideoClick} = props;
@@ -29,18 +32,21 @@ export default function HomePage(props:any) {
   );
 }
 
+
+
 function LeftPart(props: any) {
   const { startVideoClick,largeScreen } = props;
 
-
+  const appContext = useContext(AppContext)
   return (
     <>
       <div style={{ fontSize: largeScreen ? 78 : 40 }}> Chat Anytime</div>
       <div style={{ marginTop: 10 }}>
-        Served <CountUp end={100} duration={100} /> users
+        Served <CountUp  start={500} end={100000} duration={100000} /> users
       </div>
       <div style={{ marginTop: 10 }}>
-        <Button onClick={startVideoClick} startIcon={<DuoIcon />} variant="outlined">Start Video Chat Now</Button>
+        {appContext.loadingUserData && <CircularProgress/>}
+        {!appContext.loadingUserData && <Button onClick={startVideoClick} startIcon={<DuoIcon />} variant="outlined">Start Video Chat Now</Button>}
       </div>
 
     

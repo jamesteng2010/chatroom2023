@@ -177,6 +177,7 @@ export default function SignUp(props: any) {
         {step == 4 && <div>Has user info, so just show start video chat</div>}
 
         <DialogActions>
+
           <Button variant="outlined" onClick={closeSignUp}>
             Cancel
           </Button>
@@ -196,6 +197,7 @@ export default function SignUp(props: any) {
             </>
           )}
         </DialogActions>
+        <div className="contactUs"><a href='https://form.jotform.com/223587988216876' target={'_blank'}>Contact us</a></div>
       </div>
     </Dialog>
   );

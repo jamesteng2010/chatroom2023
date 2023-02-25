@@ -92,6 +92,8 @@ export default function ChatVideoLayout(props: any) {
           
             autoPlay
           ></video>
+
+<div className="contactUsOnVideo">Contact us</div>
         </>
       }
     </>

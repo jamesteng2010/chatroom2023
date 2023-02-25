@@ -156,4 +156,26 @@ input[type=number] {
   border : 1px solid red;
   
 }
+.contactUs{
+  font-size: 14px;
+}
+.contactUsOnVideo{
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 1999;
+  color: white;
+  font-size: 14px;
 
+}
+a:link {
+  color: red;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: pink;
+  background-color: transparent;
+  text-decoration: none;
+}

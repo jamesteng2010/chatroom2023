@@ -37,6 +37,7 @@ export default function ChatVideoControl(props: any) {
             )}
         </div>
       </div>
+   
     </>
   );
 }
