@@ -197,7 +197,7 @@ export default function SignUp(props: any) {
             </>
           )}
         </DialogActions>
-        <div className="contactUs"><a href='https://form.jotform.com/223587988216876' target={'_blank'}>Contact us</a></div>
+        <div className="contactUs"><a href='https://form.jotform.com/223587988216876' target='abc'>Contact us</a></div>
       </div>
     </Dialog>
   );

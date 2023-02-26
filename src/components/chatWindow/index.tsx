@@ -386,7 +386,7 @@ export default function ChatWindow(props: any) {
             localStream={localStream}
             remoteStream={remoteStream}
           ></ChatVideoLayout>
-          <div className="contactUsOnVideo"><a href='https://form.jotform.com/223587988216876' target={'_blank'}>Contact us</a></div>
+          <div className="contactUsOnVideo"><a href='https://form.jotform.com/223587988216876' target='abc'>Contact us</a></div>
         </div>
 
         <input
