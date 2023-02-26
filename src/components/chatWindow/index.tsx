@@ -19,7 +19,10 @@ export default function ChatWindow(props: any) {
   const { appInFore } = appContext;
   const { show, closeChatWindow } = props;
 
-  const [videoProp, setVideoProp] = useState({ width: 'auto' as any, height: 'auto' as any });
+  const [videoProp, setVideoProp] = useState({
+    width: "auto" as any,
+    height: "auto" as any,
+  });
   const [matching, setMatching] = useState(false);
 
   const [localStream, setLocalStream] = useState(null as any);
@@ -79,14 +82,15 @@ export default function ChatWindow(props: any) {
     video: true,
     width: { ideal: 4096 },
     height: { ideal: 2160 },
-    facingMode: "environment"
+    facingMode: "environment",
   };
 
   const showPreview = async () => {
     try {
-      const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
-      console.log("support constraints is : ")
-      console.log(supportedConstraints)
+      const supportedConstraints =
+        navigator.mediaDevices.getSupportedConstraints();
+      console.log("support constraints is : ");
+      console.log(supportedConstraints);
       const tempLocalStream: any = await navigator.mediaDevices.getUserMedia(
         constraints
       );
@@ -132,6 +136,7 @@ export default function ChatWindow(props: any) {
       if (peer) {
         console.log("peer also is reset");
         peer.destroy();
+        setPeer(null)
       }
     }
 
@@ -202,7 +207,9 @@ export default function ChatWindow(props: any) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
 
       if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
+        console.log("destory peer now....")
         peer.destroy();
+        setPeer(null)
         startMatch();
       } else {
         await sleep(500);
@@ -228,11 +235,22 @@ export default function ChatWindow(props: any) {
         if (clientToken == data.master || clientToken == data.slave) {
           console.log(">>>>> matched, which is ", data);
           setRoomName(data.room);
-          if (clientToken == data.master) {
-            setRole("master");
-            createMasterPeer();
-          } else {
-            setRole("slave");
+          const clientRole = clientToken == data.master ? "master" : "slave";
+          setRole(clientRole);
+
+          
+          const emitEvtData = {cmd : SOCKET_CMD.TELL_SERVER_CLIENT_RECEIVED_MATCH, room : data.room,role : clientRole}
+          console.log("event data is , ",emitEvtData)
+          if(clientRole == "master"){
+            setTimeout(()=>{
+              socket.emit("clientEventListener",emitEvtData );
+            },200)
+          }
+          else{
+            socket.emit("clientEventListener",emitEvtData );
+          }
+          
+          if (clientRole == "slave") {
             socket.on(`${data.room}_slaveWaitMaster`, (masterOffer: any) => {
               createSlavePeer(masterOffer);
             });
@@ -296,11 +314,18 @@ export default function ChatWindow(props: any) {
         setRemoteStream(stream);
       });
 
-      if (role == "master") {
+      if (role == "master" && peer) {
         socket.on(`${roomName}_masterConfirm`, (slaveAnswer: any) => {
           peer.signal(slaveAnswer);
         });
       }
+    }
+    if (roomName && socket) {
+      socket.on(`${roomName}_masterPeer`, () => {
+        if (role == "master") {
+          createMasterPeer();
+        }
+      });
     }
   }, [peer, roomName]);
 
@@ -386,7 +411,11 @@ export default function ChatWindow(props: any) {
             localStream={localStream}
             remoteStream={remoteStream}
           ></ChatVideoLayout>
-          <div className="contactUsOnVideo"><a href='https://form.jotform.com/223587988216876' target='abc'>Contact us</a></div>
+          <div className="contactUsOnVideo">
+            <a href="https://form.jotform.com/223587988216876" target="abc">
+              Contact us
+            </a>
+          </div>
         </div>
 
         <input
