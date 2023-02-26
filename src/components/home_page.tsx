@@ -42,7 +42,7 @@ function LeftPart(props: any) {
     <>
       <div style={{ fontSize: largeScreen ? 78 : 40 }}> Chat Anytime</div>
       <div style={{ marginTop: 10 }}>
-        Served <CountUp  start={500} end={100000} duration={100000} /> users
+        Matched <CountUp  start={500} end={100000} duration={100000} /> persons
       </div>
       <div style={{ marginTop: 10 }}>
         {appContext.loadingUserData && <CircularProgress/>}

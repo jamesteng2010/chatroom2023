@@ -32,6 +32,8 @@ export default function SignUp(props: any) {
   const [mobile, setMobile] = useState("");
   const [sending, setSending] = useState(false);
   const [mobileValidate, setMobileValidate] = useState(true);
+  const [country,setCountry] = useState("")
+  const [ip,setIp] = useState("")
   const changeCountryCode = (event: any) => {
     setCountryCode(event.target.value);
   };
@@ -52,10 +54,12 @@ export default function SignUp(props: any) {
       method: "GET",
     });
 
-    if (res && res.data) {
-      console.log(res.data);
-      const counCode = res.data.country_code;
+    if (res) {
+      console.log(res);
+      const counCode = res.country_code;
       setCountryCode(counCode);
+      setCountry(res.country_name)
+      setIp(res.IPv4)
     }
   };
   const changeMobile = (event: any) => {
@@ -96,7 +100,7 @@ export default function SignUp(props: any) {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, gender }),
+        body: JSON.stringify({ name, gender,country,ip }),
       });
       appContext.setUserData({ name });
       closeSignUp();

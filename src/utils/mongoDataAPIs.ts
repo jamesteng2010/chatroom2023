@@ -99,9 +99,8 @@ export const updateCollection = async (
     body: JSON.stringify({
       ...getRequestCommonPart(database, collection),
       filter: filter,
-      update: {
-        $set: updatedValues,
-      },
+      updateValues: updatedValues,
+      
     }),
   });
 };
