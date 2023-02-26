@@ -330,8 +330,11 @@ export default function ChatWindow(props: any) {
   }, [peer, roomName]);
 
   const createMasterPeer = () => {
-    console.log(">>>> master create peer and signal to slave");
-    setPeer(new Peer({ initiator: true, trickle: false, stream: localStream }));
+    console.log(">>>> master create peer and signal to slave, and local stream is , ",localStream);
+    const tempPeer = new Peer({ initiator: true, trickle: false})
+    tempPeer.addStream(localStream)
+    setPeer(tempPeer);
+
   };
   const createSlavePeer = (masterOffer: any) => {
     console.log(">>>>>> slave got master offer, so create slave side peer");
