@@ -244,7 +244,7 @@ export default function ChatWindow(props: any) {
           if(clientRole == "master"){
             setTimeout(()=>{
               socket.emit("clientEventListener",emitEvtData );
-            },200)
+            },1000)
           }
           else{
             socket.emit("clientEventListener",emitEvtData );
