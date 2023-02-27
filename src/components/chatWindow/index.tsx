@@ -91,12 +91,10 @@ export default function ChatWindow(props: any) {
         navigator.mediaDevices.getSupportedConstraints();
       console.log("support constraints is : ");
       console.log(supportedConstraints);
-      const tempLocalStream: any = await navigator.mediaDevices.getUserMedia(
-        constraints
-      );
-
-      // handleSuccess(tempLocalStream);
-      setLocalStream(tempLocalStream);
+      navigator.mediaDevices
+        .getUserMedia(constraints)
+        .then(setLocalStream)
+        .catch(() => {});
     } catch (e) {
       setSnackBarState({
         open: true,
@@ -136,7 +134,7 @@ export default function ChatWindow(props: any) {
       if (peer) {
         console.log("peer also is reset");
         peer.destroy();
-        setPeer(null)
+        setPeer(null);
       }
     }
 
@@ -207,9 +205,9 @@ export default function ChatWindow(props: any) {
       const lastUpdateTime = parseInt(timePartnerLastEle.value);
 
       if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
-        console.log("destory peer now....")
+        console.log("destory peer now....");
         peer.destroy();
-        setPeer(null)
+        setPeer(null);
         startMatch();
       } else {
         await sleep(500);
@@ -238,18 +236,16 @@ export default function ChatWindow(props: any) {
           const clientRole = clientToken == data.master ? "master" : "slave";
           setRole(clientRole);
 
-          
-          const emitEvtData = {cmd : SOCKET_CMD.TELL_SERVER_CLIENT_RECEIVED_MATCH, room : data.room,role : clientRole}
-          console.log("event data is , ",emitEvtData)
-          if(clientRole == "master"){
-            setTimeout(()=>{
-              socket.emit("clientEventListener",emitEvtData );
-            },1000)
-          }
-          else{
-            socket.emit("clientEventListener",emitEvtData );
-          }
-          
+          const emitEvtData = {
+            cmd: SOCKET_CMD.TELL_SERVER_CLIENT_RECEIVED_MATCH,
+            room: data.room,
+            role: clientRole,
+          };
+          console.log("event data is , ", emitEvtData);
+       
+            socket.emit(`${clientRole}Confirm`, emitEvtData);
+       
+
           if (clientRole == "slave") {
             socket.on(`${data.room}_slaveWaitMaster`, (masterOffer: any) => {
               createSlavePeer(masterOffer);
@@ -290,6 +286,7 @@ export default function ChatWindow(props: any) {
 
       peer.on("connect", async () => {
         console.log(" >>>>>>>peer connected ");
+
         setChatStatus(CHAT_STATUS.CONNECTED);
         setPeerLastActivity(getNow());
         socket.disconnect();
@@ -330,11 +327,13 @@ export default function ChatWindow(props: any) {
   }, [peer, roomName]);
 
   const createMasterPeer = () => {
-    console.log(">>>> master create peer and signal to slave, and local stream is , ",localStream);
-    const tempPeer = new Peer({ initiator: true, trickle: false})
-    tempPeer.addStream(localStream)
+    console.log(
+      ">>>> master create peer and signal to slave, and local stream is , ",
+      localStream
+    );
+    const tempPeer = new Peer({ initiator: true, trickle: false });
+    tempPeer.addStream(localStream);
     setPeer(tempPeer);
-
   };
   const createSlavePeer = (masterOffer: any) => {
     console.log(">>>>>> slave got master offer, so create slave side peer");

@@ -28,12 +28,13 @@ export default function ChatVideoLayout(props: any) {
   },[chatStatus,localStream,remoteStream])
 
   const setVideoStream = (videoEleName:string,stream:any)=>{
-    console.log(`set video stream for ${videoEleName}, its stream is ${stream}` )
+    console.log(`set video stream for ${videoEleName}, its stream is` )
+    console.log( stream)
     const videoEle :any = document.getElementById(videoEleName)
     if(videoEle){
       videoEle.srcObject = stream
     }
-    // videoEle.play()
+     videoEle.play()
   }
 
 
