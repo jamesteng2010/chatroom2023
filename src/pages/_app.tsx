@@ -7,11 +7,13 @@ import AppContext from "@/context/userDataContext";
 import { sendRequest } from "@/utils/httpUtils";
 import { getRandomStr } from "@/utils/strUtil";
 import { getCookie } from "cookies-next";
-import { useState, useContext, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useCallback, Component } from "react";
 import "../style.css";
 import { io } from "socket.io-client";
+import TestPeerJS from "./testPeerJs";
+import { AppProps } from "next/app";
 
-export default function Index() {
+export default function Index({ Component, pageProps }: AppProps) {
   const appContext = useContext(AppContext);
   const [userData, setUserData] = useState("");
   const [showChatWindow, setShowChatWindow] = useState(false);
@@ -19,6 +21,7 @@ export default function Index() {
   const [randomKey, setRandomKey] = useState("");
   const [signUp, setSignUp] = useState(false);
   const [signUpStep, setSignUpStep] = useState(1);
+  const [showTestPage,setShowTestPage] = useState(false)
   const [appInFore,setAppInFore] = useState(true)
 
   const closeSignUp = (event: any, reason: any) => {
@@ -49,26 +52,29 @@ export default function Index() {
   }
 
   return (
-    <AppContext.Provider
-      value={{
-        userData,
-        setUserData,
-        loadingUserData,
-        setLoadingUserData,
-        setSignUpStep,
-        appInFore
-      }}
-    >
-      <SiteLayout loginClick={() => setSignUp(true)}>
-        <HomePage startVideoClick={startToChat}></HomePage>
-        <SignUp
-          intialStep={signUpStep}
-          key={randomKey}
-          showSignUp={signUp}
-          closeSignUp={closeSignUp}
-        />
-        <ChatWindow show={showChatWindow} closeChatWindow={closeChatWindow}></ChatWindow>
-      </SiteLayout>
-    </AppContext.Provider>
+    // <AppContext.Provider
+    //   value={{
+    //     userData,
+    //     setUserData,
+    //     loadingUserData,
+    //     setLoadingUserData,
+    //     setSignUpStep,
+    //     appInFore
+    //   }}
+    // >
+    //   <SiteLayout loginClick={() => setSignUp(true)}>
+    //     <HomePage startVideoClick={startToChat}></HomePage>
+    //     <SignUp
+    //       intialStep={signUpStep}
+    //       key={randomKey}
+    //       showSignUp={signUp}
+    //       closeSignUp={closeSignUp}
+    //     />
+    //     <ChatWindow show={showChatWindow} closeChatWindow={closeChatWindow}></ChatWindow>
+    //     <TestPeerJS open={showTestPage}></TestPeerJS>
+    //   </SiteLayout>
+    // </AppContext.Provider>
+
+    <Component {...pageProps} />
   );
 }
