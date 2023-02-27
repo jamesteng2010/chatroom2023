@@ -212,9 +212,10 @@ export default function ChatWindow(props: any) {
 
       if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
         console.log("destory peer now....");
-        peer.destroy();
-        setPeer(null);
-        startMatch();
+        stopMatching()
+        // peer.destroy();
+        // setPeer(null);
+        // startMatch();
       } else {
         await sleep(500);
         checkPartnerStatus();
@@ -383,9 +384,11 @@ export default function ChatWindow(props: any) {
   };
 
   const startMatch = () => {
+    console.log(">>>>>>>>>=============start a new match================>>>>>>>")
     setChatStatus(CHAT_STATUS.MATCHING);
   };
   const stopMatching = async () => {
+    console.log(">>>>>>>>=====Current match stop=======>>>>>>")
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
