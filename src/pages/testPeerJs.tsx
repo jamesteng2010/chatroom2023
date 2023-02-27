@@ -6,12 +6,17 @@ export default function TestPeerJS(props: any) {
   const { open } = props;
   const [peerId, setPeerId] = useState("");
   const [destId, setDestId] = useState("");
-  const [peer, setPeer] = useState(null);
+  const [peer, setPeer] = useState(null as any);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
 
   useEffect(() => {
-    setPeer(new Peer());
+    if (typeof navigator !== "undefined") {
+      const Peer = require("peerjs").default;
+      setPeer(new Peer());
+    }
+
+    console.log(navigator);
     showLocalVideo();
   }, []);
 
@@ -26,13 +31,13 @@ export default function TestPeerJS(props: any) {
         console.log("how many connects for this peer, ", peer.connections);
       });
 
-      peer.on("call",(call:any)=>{
-        call.answer(localStream)
-        call.on("stream",(remoteStream:any)=>{
-            console.log("be called side get remote stream is , ",remoteStream)
-            setRemoteStream(remoteStream)
-        })
-      })
+      peer.on("call", (call: any) => {
+        call.answer(localStream);
+        call.on("stream", (remoteStream: any) => {
+          console.log("be called side get remote stream is , ", remoteStream);
+          setRemoteStream(remoteStream);
+        });
+      });
     }
   }, [peer]);
 
@@ -57,35 +62,33 @@ export default function TestPeerJS(props: any) {
   }, [remoteStream]);
 
   const showLocalVideo = () => {
+    const nav: any = window.navigator;
     const getUserMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia;
-    getUserMedia({ video: true, audio: true }, function (stream) {
+      nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
+    getUserMedia({ video: true, audio: true }, function (stream: any) {
       console.log(stream);
       setLocalStream(stream);
     });
   };
 
-  const changeDestId = (e) => {
+  const changeDestId = (e: any) => {
     setDestId(e.target.value);
   };
   const connectPeer = () => {
     peer.connect(destId);
   };
 
-  // the side who start the call , set remote stream with local stream 
+  // the side who start the call , set remote stream with local stream
   const videoCall = () => {
-    var call = peer.call(destId, localStream);
-    console.log("call is ",call)
-    call.on("stream", (remoteStream:any) => {
-       console.log("the remote stream which start call get is ,")
-       console.log(remoteStream)
+    console.log("peer is , ", peer);
+    const call = peer.call(destId, localStream);
+    console.log("call is ", call);
+    call.on("stream", (remoteStream: any) => {
+      console.log("the remote stream which start call get is ,");
+      console.log(remoteStream);
       setRemoteStream(remoteStream);
     });
   };
-
-
 
   return (
     <div>
