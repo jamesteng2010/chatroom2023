@@ -323,6 +323,11 @@ export default function ChatWindow(props: any) {
         setRemoteStream(stream);
       });
 
+      peer.on("error",(error:any)=>{
+        console.log("************* there is an error happen on peer********")
+        console.log(error)
+      })
+
       if (role == "master" && peer) {
         socket.on(`${roomName}_masterConfirm`, (slaveAnswer: any) => {
           peer.signal(slaveAnswer);
@@ -343,8 +348,8 @@ export default function ChatWindow(props: any) {
       ">>>> master create peer and signal to slave, and local stream is , ",
       localStream
     );
-    const tempPeer = new Peer({ initiator: true, trickle: false });
-    tempPeer.addStream(localStream);
+    const tempPeer = new Peer({ initiator: true, trickle: false,stream : localStream });
+  
     setPeer(tempPeer);
   };
   const createSlavePeer = (masterOffer: any) => {
