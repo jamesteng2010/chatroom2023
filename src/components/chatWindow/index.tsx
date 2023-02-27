@@ -128,6 +128,11 @@ export default function ChatWindow(props: any) {
       }
       console.log(">>>>>> disconnect from socket server");
       if (socket) {
+        console.log("remove all event listner ....")
+        socket.on(`${roomName}_masterConfirm`);
+        socket.on(`${roomName}_masterPeer`);
+        socket.off(`${roomName}_slaveWaitMaster`);
+        socket.off(`${clientToken}_matched`);
         socket.disconnect();
         setSocket(null);
       }
@@ -242,9 +247,8 @@ export default function ChatWindow(props: any) {
             role: clientRole,
           };
           console.log("event data is , ", emitEvtData);
-       
-            socket.emit(`${clientRole}Confirm`, emitEvtData);
-       
+
+          socket.emit(`${clientRole}Confirm`, emitEvtData);
 
           if (clientRole == "slave") {
             socket.on(`${data.room}_slaveWaitMaster`, (masterOffer: any) => {
