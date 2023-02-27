@@ -21,7 +21,7 @@ export default function TestPeerJS(props: any) {
   }, []);
 
   useEffect(() => {
-    if (peer) {
+    if (peer & localStream) {
       peer.on("open", (id: any) => {
         setPeerId(id);
         console.log("my id is , ", id);
@@ -32,6 +32,7 @@ export default function TestPeerJS(props: any) {
       });
 
       peer.on("call", (call: any) => {
+        console.log("what is local stream now , ",localStream)
         call.answer(localStream);
         call.on("stream", (remoteStream: any) => {
           console.log("be called side get remote stream is , ", remoteStream);
@@ -39,17 +40,15 @@ export default function TestPeerJS(props: any) {
         });
       });
     }
-  }, [peer]);
-
-  useEffect(() => {
     if (localStream) {
-      const videoEle: any = document.getElementById("localVideo");
-      if (videoEle) {
-        videoEle.srcObject = localStream;
-        videoEle.play();
+        const videoEle: any = document.getElementById("localVideo");
+        if (videoEle) {
+          videoEle.srcObject = localStream;
+          videoEle.play();
+        }
       }
-    }
-  }, [localStream]);
+  }, [peer,localStream]);
+
 
   useEffect(() => {
     if (remoteStream) {
