@@ -14,6 +14,7 @@ import ChatSnackBar from "../ui/snackbar";
 import ChatVideoLayout from "./videoLayout/chatVideoLayout";
 import AppContext from "@/context/userDataContext";
 var Peer = require("simple-peer");
+
 export default function ChatWindow(props: any) {
   const appContext = useContext(AppContext);
   const { appInFore } = appContext;
@@ -343,7 +344,7 @@ export default function ChatWindow(props: any) {
     console.log(">>>>>> slave got master offer, so create slave side peer");
     const tempPeer = new Peer({
       initiator: false,
-      trickle: false,
+      trickle: false
     });
     console.log(
       ">>>>>>slave add local stream to peer and  send stream to  partner"
