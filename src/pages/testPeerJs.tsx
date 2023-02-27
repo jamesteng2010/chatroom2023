@@ -21,7 +21,8 @@ export default function TestPeerJS(props: any) {
   }, []);
 
   useEffect(() => {
-    if (peer & localStream!=null) {
+
+    if (peer && localStream) {
       peer.on("open", (id: any) => {
         setPeerId(id);
         console.log("my id is , ", id);
