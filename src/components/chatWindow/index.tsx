@@ -63,11 +63,12 @@ export default function ChatWindow(props: any) {
 
   useEffect(() => {
     console.log("use effect in chat window");
-    if (show) {
+    if (show && appInFore) {
       console.log("start to initialize the preview ");
 
       showPreview();
     } else {
+      console.log("stop preview and release camera and mic")
       if (localStream) {
         localStream.getTracks().forEach(function (track: any) {
           track.stop();
@@ -76,7 +77,7 @@ export default function ChatWindow(props: any) {
         setLocalStream(null);
       }
     }
-  }, [show]);
+  }, [show,appInFore]);
 
   const constraints = {
     audio: true,
@@ -213,9 +214,14 @@ export default function ChatWindow(props: any) {
       if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
         console.log("destory peer now....");
         stopMatching()
-        // peer.destroy();
-        // setPeer(null);
-        // startMatch();
+       
+        setTimeout(()=>{
+          peer.destroy();
+          setPeer(null);
+          startMatch();
+        },500);
+      
+        // 
       } else {
         await sleep(500);
         checkPartnerStatus();
