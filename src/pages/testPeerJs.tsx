@@ -21,7 +21,7 @@ export default function TestPeerJS(props: any) {
   }, []);
 
   useEffect(() => {
-    if (peer & localStream) {
+    if (peer & localStream!=null) {
       peer.on("open", (id: any) => {
         setPeerId(id);
         console.log("my id is , ", id);
@@ -92,8 +92,8 @@ export default function TestPeerJS(props: any) {
   return (
     <div>
       my peer id is : {peerId}
-      <video id="localVideo"></video>
-      <video id="remoteVideo"></video>
+      <video muted id="localVideo"></video>
+      <video muted  id="remoteVideo"></video>
       <input type="text" value={destId} onChange={changeDestId}></input>
       <Button variant="outlined" onClick={connectPeer}>
         Connect Peer
