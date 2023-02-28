@@ -10,7 +10,7 @@ import { getCookie } from "cookies-next";
 import { useState, useContext, useEffect, useCallback, Component } from "react";
 import "../style.css";
 import { io } from "socket.io-client";
-import TestPeerJS from "./testPeerJs";
+
 import { AppProps } from "next/app";
 
 export default function Index({ Component, pageProps }: AppProps) {
@@ -52,29 +52,30 @@ export default function Index({ Component, pageProps }: AppProps) {
   }
 
   return (
-    // <AppContext.Provider
-    //   value={{
-    //     userData,
-    //     setUserData,
-    //     loadingUserData,
-    //     setLoadingUserData,
-    //     setSignUpStep,
-    //     appInFore
-    //   }}
-    // >
-    //   <SiteLayout loginClick={() => setSignUp(true)}>
-    //     <HomePage startVideoClick={startToChat}></HomePage>
-    //     <SignUp
-    //       intialStep={signUpStep}
-    //       key={randomKey}
-    //       showSignUp={signUp}
-    //       closeSignUp={closeSignUp}
-    //     />
-    //     <ChatWindow show={showChatWindow} closeChatWindow={closeChatWindow}></ChatWindow>
-    //     <TestPeerJS open={showTestPage}></TestPeerJS>
-    //   </SiteLayout>
-    // </AppContext.Provider>
+    <AppContext.Provider
+      value={{
+        userData,
+        setUserData,
+        loadingUserData,
+        setLoadingUserData,
+        setSignUpStep,
+        appInFore
+      }}
+    >
+      <SiteLayout loginClick={() => setSignUp(true)}>
+        <HomePage startVideoClick={startToChat}></HomePage>
+        <SignUp
+          intialStep={signUpStep}
+          key={randomKey}
+          showSignUp={signUp}
+          closeSignUp={closeSignUp}
+        />
+       
+        <ChatWindow show={showChatWindow} closeChatWindow={closeChatWindow}></ChatWindow>
+       
+      </SiteLayout>
+    </AppContext.Provider>
 
-    <Component {...pageProps} />
+    // <Component {...pageProps} />
   );
 }

@@ -16,6 +16,19 @@ import AppContext from "@/context/userDataContext";
 var Peer = require("simple-peer");
 
 export default function ChatWindow(props: any) {
+  const [peer, setPeer] = useState(null as any);
+  const [socket, setSocket] = useState(null as any);
+
+  const [localStream, setLocalStream] = useState(null as any);
+  const [remoteStream, setRemoteStream] = useState(null as any);
+  const [mediaControls, setMediaControls] = useState({
+    video: true,
+    audio: true,
+  });
+  const [chatStatus, setChatStatus] = useState(CHAT_STATUS.IDEL);
+  const [role, setRole] = useState("");
+  const [peerId, setPeerId] = useState("");
+  const [clientToken, setClientToken] = useState("");
   const appContext = useContext(AppContext);
   const { appInFore } = appContext;
   const { show, closeChatWindow } = props;
@@ -24,23 +37,62 @@ export default function ChatWindow(props: any) {
     width: "auto" as any,
     height: "auto" as any,
   });
-  const [matching, setMatching] = useState(false);
-
-  const [localStream, setLocalStream] = useState(null as any);
-  const [remoteStream, setRemoteStream] = useState(null as any);
-  const [chatStatus, setChatStatus] = useState(CHAT_STATUS.IDEL);
-  const [socket, setSocket] = useState(null as any);
-  const [roomName, setRoomName] = useState("");
-  const [role, setRole] = useState("");
-  const [peer, setPeer] = useState(null as any);
   const [peerLastActivity, setPeerLastActivity] = useState(0);
-  const chatStatusRef: any = useRef();
+
   const [snackBarState, setSnackBarState] = useState(null as any);
 
+  const constraints = {
+    audio: true,
+    video: true,
+    width: { ideal: 4096 },
+    height: { ideal: 2160 },
+    facingMode: "environment",
+  };
+
   useEffect(() => {
-    window.addEventListener("resize", setVideoSize);
-    setVideoSize();
-  }, []);
+    if (show) {
+      // get client token
+      const clientToken: any = getCookie("clientToken");
+      setClientToken(clientToken);
+      // load peer js and initialized peer
+      if (typeof navigator !== "undefined") {
+        const Peer = require("peerjs").default;
+        setPeer(new Peer());
+      }
+
+      // initilize the socket
+      console.log("initlized the socket===========>");
+      const tempSocket = io(GlobalConfig.backendAPI.host);
+      setSocket(tempSocket);
+
+      window.addEventListener("resize", setVideoSize);
+      setVideoSize();
+    } else {
+      setSocket(null);
+      resetPeer();
+    }
+  }, [show]);
+
+  const resetPeer = () => {
+    if (peer) {
+      console.log(
+        "==========>>>>> disconnect the peer and destory peer=====>>>>>"
+      );
+      try {
+        peer.disconnect();
+        peer.destory();
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  };
+
+  const setVideoSize = () => {
+    setVideoProp({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+  };
 
   useEffect(() => {
     console.log("app in fore, ", appInFore);
@@ -54,116 +106,132 @@ export default function ChatWindow(props: any) {
     });
   };
 
-  const setVideoSize = () => {
-    setVideoProp({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-  };
-
   useEffect(() => {
     console.log("use effect in chat window");
     if (show && appInFore) {
-      console.log("start to initialize the preview ");
+      console.log(
+        " >>>>>>> Beginning : start to initialize the preview*************** "
+      );
 
       showPreview();
     } else {
-      console.log("stop preview and release camera and mic")
+      console.log(">>>>> stop preview and release camera and mic>>>>>>");
       if (localStream) {
         localStream.getTracks().forEach(function (track: any) {
           track.stop();
         });
-
+        setChatStatus(CHAT_STATUS.IDEL);
         setLocalStream(null);
       }
     }
-  }, [show,appInFore]);
-
-  const constraints = {
-    audio: true,
-    video: true,
-    width: { ideal: 4096 },
-    height: { ideal: 2160 },
-    facingMode: "environment",
-  };
-
-  const showPreview = async () => {
-    try {
-      const supportedConstraints =
-        navigator.mediaDevices.getSupportedConstraints();
-      console.log("support constraints is : ");
-      console.log(supportedConstraints);
-      navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(setLocalStream)
-        .catch(() => {});
-    } catch (e) {
-      setSnackBarState({
-        open: true,
-        message: "failed to get media device",
-        snackType: "error",
-        handleClose: handleSnackBarClose,
-      });
-      console.log(e);
-    }
-  };
-
-  const closeChat = () => {
-    if (
-      chatStatus == CHAT_STATUS.CONNECTED ||
-      chatStatus == CHAT_STATUS.MATCHING
-    ) {
-      stopMatching();
-    }
-    closeChatWindow && closeChatWindow();
-  };
+  }, [show, appInFore]);
 
   useEffect(() => {
-    const clientToken = getCookie("clientToken");
+    if (peer && localStream) {
+      console.log("setup peer events.....");
+      peer.on("open", (peerId: any) => {
+        console.log("peer id is , ",peerId)
+        setPeerId(peerId);
+      });
 
+      peer.on("call",(slaveCall:any)=>{
+          console.log("get call from master, answer it now>>>>>>>>>>>")
+          slaveCall.answer(localStream);
+          console.log("on slave side , local stream is , ",localStream)
+          console.log("slave call is , ",slaveCall)
+          slaveCall.on("stream",(masterStream:any)=>{
+            mediaConnectionEstablished()
+            console.log("set remote stream as master stream>>>>>>>>>>>")
+            setRemoteStream(masterStream)
+          
+          })
+      })
+
+     
+    }
+  }, [peer,localStream]);
+
+  const mediaConnectionEstablished = ()=>{
+    console.log("master and slave connected!!!")
+    setChatStatus(CHAT_STATUS.CONNECTED)
+    clearPeerMatch_whenConnected()
+  }
+
+  useEffect(() => {
+    if (socket && localStream) {
+      socket.on(`${clientToken}_matched`, async (data: any) => {
+        console.log(">>>>> matched, which is ", data);
+        const { dest, room } = data;
+        if (dest) {
+            console.log("find dest is ,",dest)
+            console.log("now local stream is , ",localStream)
+            const masterCall = peer.call(dest,localStream)
+            console.log("master call is , ",masterCall)
+            masterCall.on("stream",(slaveStream:any)=>{
+              console.log("get slave stream is , ",slaveStream)
+              mediaConnectionEstablished()
+              setRemoteStream(slaveStream)
+            })
+        }
+      });
+    }
+  }, [socket,localStream]);
+
+  useEffect(() => {
     if (chatStatus == CHAT_STATUS.MATCHING) {
+      console.log("1. start matching partner>>>>>>>>>>");
       matchPartnerViaSocketServer();
+      updateMatchingTimeStamp();
     }
-    if (chatStatus == CHAT_STATUS.IDEL) {
-      if (clientToken) {
-        clearPeerMatch_whenConnected();
-      }
-      console.log(">>>>>> disconnect from socket server");
-      if (socket) {
-        console.log("remove all event listner ....")
-        socket.on(`${roomName}_masterConfirm`);
-        socket.on(`${roomName}_masterPeer`);
-        socket.off(`${roomName}_slaveWaitMaster`);
-        socket.off(`${clientToken}_matched`);
-        socket.disconnect();
-        setSocket(null);
-      }
-      if (peer) {
-        console.log("peer also is reset");
-        peer.destroy();
-        setPeer(null);
-      }
-    }
-
-    if (chatStatus == CHAT_STATUS.CONNECTED) {
-      clearPeerMatch_whenConnected();
-      keepTellingPartner();
-      checkPartnerStatus();
+    if(chatStatus == CHAT_STATUS.IDEL){
+      
     }
   }, [chatStatus]);
 
-  const keepTellingPartner = async () => {
-    if (peer) {
-      try {
-        peer.send(PEER_CMD.I_AM_HERE);
-        await sleep(500);
+  const matchPartnerViaSocketServer = async () => {
+    console.log(">>>>> insert search peer to peer match");
+    const createOfferResult = await sendRequest(
+      "/api/matching/insertSearchingPeer",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clientToken: clientToken,
 
-        keepTellingPartner();
-      } catch (e) {
-        console.log(e);
+          createdTime: getNow(),
+          status: "searching",
+          lastUpdate: getNow(),
+          peerId: peerId,
+        }),
       }
-    }
+    );
+    console.log(createOfferResult);
+    console.log(">>>>>>connecting to socket server");
+
+    console.log(">>>>> setup socket and emit server with client token >>>>>>");
+
+    socket.emit("matching_chat_partner", { clientToken: clientToken });
   };
+
+  const clearPeerMatch_whenConnected = async () => {
+  
+    await sendRequest("/api/matching/removePeerMatch", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        clientToken,
+      }),
+    });
+  };
+
+  
+
   const updateMatchingTimeStamp = async () => {
     const chatStatusEle: any = document.getElementById("chatStatus");
     //chatStatusEle && console.log("now chat status value is ",chatStatusEle.value)
@@ -177,7 +245,7 @@ export default function ChatWindow(props: any) {
 
     if (socket) {
       //console.log("update matching peer update time");
-      const clientToken = getCookie("clientToken");
+
       try {
         socket.emit(
           "clientEventListener",
@@ -193,229 +261,44 @@ export default function ChatWindow(props: any) {
         console.log("connec to socket failed");
       }
     }
-
     await sleep(500);
     updateMatchingTimeStamp();
   };
 
-  const checkPartnerStatus = async () => {
-    const chatStatusEle: any = document.getElementById("chatStatus");
-    if (
-      chatStatusEle &&
-      parseInt(chatStatusEle.value) !== CHAT_STATUS.CONNECTED
-    ) {
-      return;
-    }
-
-    const timePartnerLastEle: any = document.getElementById("timePartnerLast");
-    if (timePartnerLastEle) {
-      const lastUpdateTime = parseInt(timePartnerLastEle.value);
-
-      if (getDiffFromNow(lastUpdateTime, "seconds") > 5) {
-        console.log("destory peer now....");
-        stopMatching()
-       
-        setTimeout(()=>{
-          peer.destroy();
-          setPeer(null);
-          startMatch();
-        },500);
-      
-        // 
-      } else {
-        await sleep(500);
-        checkPartnerStatus();
-      }
+  const showPreview = async () => {
+    try {
+      const supportedConstraints =
+        navigator.mediaDevices.getSupportedConstraints();
+      console.log("support constraints is : ");
+      console.log(supportedConstraints);
+      navigator.mediaDevices
+        .getUserMedia(constraints)
+        .then((stream: any) => {
+          console.log("local stream is , ", stream);
+          setLocalStream(stream);
+        })
+        .catch(() => {});
+    } catch (e) {
+      setSnackBarState({
+        open: true,
+        message: "failed to get media device",
+        snackType: "error",
+        handleClose: handleSnackBarClose,
+      });
+      console.log(e);
     }
   };
 
-  useEffect(() => {
-    const clientToken = getCookie("clientToken");
-    if (socket) {
-      if (chatStatus == CHAT_STATUS.MATCHING) {
-        updateMatchingTimeStamp();
-      }
-      socket.on("connect", async () => {
-        console.log(">>>>> connected to socket successfully");
-      });
-      console.log(
-        "set up client token matched event ====>",
-        `${clientToken}_matched`
-      );
-      socket.on(`${clientToken}_matched`, async (data: any) => {
-        if (clientToken == data.master || clientToken == data.slave) {
-          console.log(">>>>> matched, which is ", data);
-          setRoomName(data.room);
-          const clientRole = clientToken == data.master ? "master" : "slave";
-          setRole(clientRole);
-
-          const emitEvtData = {
-            cmd: SOCKET_CMD.TELL_SERVER_CLIENT_RECEIVED_MATCH,
-            room: data.room,
-            role: clientRole,
-          };
-          console.log("event data is , ", emitEvtData);
-
-          socket.emit(`${clientRole}Confirm`, emitEvtData);
-
-          if (clientRole == "slave") {
-            socket.on(`${data.room}_slaveWaitMaster`, (masterOffer: any) => {
-              createSlavePeer(masterOffer);
-            });
-          }
-        } else {
-          console.log("ignore this match, as it is not its match");
-        }
-      });
-    } else {
-      console.log(">>>>>socket is reset");
-    }
-  }, [socket, chatStatus]);
-
-  useEffect(() => {
-    if (peer) {
-      peer.on("signal", async (offer: any) => {
-        console.log(">>>>> signal data is , ", offer);
-        if (offer.type == "offer") {
-          const clientToken = await getCookie("clientToken");
-          socket.emit("clientEventListener", {
-            cmd: SOCKET_CMD.MASTER_SIGNAL,
-            clientToken,
-            offer,
-            room: roomName,
-          });
-        }
-        if (offer.type == "answer") {
-          const clientToken = await getCookie("clientToken");
-          socket.emit("clientEventListener", {
-            cmd: SOCKET_CMD.SLAVE_ANSWER,
-            clientToken,
-            offer,
-            room: roomName,
-          });
-        }
-      });
-
-      peer.on("connect", async () => {
-        console.log(" >>>>>>>peer connected ");
-
-        setChatStatus(CHAT_STATUS.CONNECTED);
-        setPeerLastActivity(getNow());
-        socket.disconnect();
-      });
-
-      peer.on("data", (data: any) => {
-        const receivedStr = convertUint8ToString(data);
-        //console.log("receive data from ====>", receivedStr);
-        if (receivedStr == PEER_CMD.I_AM_HERE) {
-          setPeerLastActivity(getNow());
-        }
-        if (receivedStr == PEER_CMD.PARTNER_STOP) {
-          startMatch();
-        }
-      });
-      peer.on("close", async () => {
-        console.log("peer closed!!!, its role is , ", role);
-      });
-      peer.on("stream", async (stream: any) => {
-        console.log(" remote stream is , ", stream);
-
-        setRemoteStream(stream);
-      });
-
-      peer.on("error",(error:any)=>{
-        console.log("************* there is an error happen on peer********")
-        console.log(error)
-      })
-
-      if (role == "master" && peer) {
-        socket.on(`${roomName}_masterConfirm`, (slaveAnswer: any) => {
-          peer.signal(slaveAnswer);
-        });
-      }
-    }
-    if (roomName && socket) {
-      socket.on(`${roomName}_masterPeer`, () => {
-        if (role == "master") {
-          createMasterPeer();
-        }
-      });
-    }
-  }, [peer, roomName]);
-
-  const createMasterPeer = () => {
-    console.log(
-      ">>>> master create peer and signal to slave, and local stream is , ",
-      localStream
-    );
-    const tempPeer = new Peer({ initiator: true, trickle: false,stream : localStream });
-  
-    setPeer(tempPeer);
+  const closeChat = () => {
+    closeChatWindow && closeChatWindow();
   };
-  const createSlavePeer = (masterOffer: any) => {
-    console.log(">>>>>> slave got master offer, so create slave side peer");
-    const tempPeer = new Peer({
-      initiator: false,
-      trickle: false
-    });
-    console.log(
-      ">>>>>>slave add local stream to peer and  send stream to  partner"
-    );
-    tempPeer.addStream(localStream);
-    setPeer(tempPeer);
-    tempPeer.signal(masterOffer);
-  };
-  const matchPartnerViaSocketServer = async () => {
-    const clientToken = await getCookie("clientToken");
-    console.log(">>>>> insert search peer to peer match");
-    const createOfferResult = await sendRequest(
-      "/api/matching/insertSearchingPeer",
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          clientToken,
-
-          createdTime: getNow(),
-          status: "searching",
-          lastUpdate: getNow(),
-        }),
-      }
-    );
-    console.log(createOfferResult);
-    console.log(">>>>>>connecting to socket server");
-
-    console.log(">>>>> setup socket and emit server with client token >>>>>>");
-    const tempSocket = io(GlobalConfig.backendAPI.host);
-    setSocket(tempSocket);
-    tempSocket.emit("matching_chat_partner", { clientToken });
-  };
-
-  const startMatch = () => {
-    console.log(">>>>>>>>>=============start a new match================>>>>>>>")
+  const startChat = () => {
     setChatStatus(CHAT_STATUS.MATCHING);
   };
-  const stopMatching = async () => {
-    console.log(">>>>>>>>=====Current match stop=======>>>>>>")
+  const stopMatching = () => {
     setChatStatus(CHAT_STATUS.IDEL);
   };
 
-  const clearPeerMatch_whenConnected = async () => {
-    const clientToken = getCookie("clientToken");
-    await sendRequest("/api/matching/removePeerMatch", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        clientToken,
-      }),
-    });
-  };
   return (
     <>
       <Dialog fullScreen open={show} onClose={closeChat}>
@@ -427,7 +310,7 @@ export default function ChatWindow(props: any) {
           <ChatVideoLayout
             chatStatus={chatStatus}
             stopMatching={stopMatching}
-            startMatch={startMatch}
+            startMatch={startChat}
             videoProp={videoProp}
             localStream={localStream}
             remoteStream={remoteStream}
@@ -444,12 +327,7 @@ export default function ChatWindow(props: any) {
           value={peerLastActivity}
           id="timePartnerLast"
         ></input>
-        <input
-          type="hidden"
-          id="chatStatus"
-          value={chatStatus}
-          ref={chatStatusRef}
-        ></input>
+        <input type="hidden" id="chatStatus" value={chatStatus}></input>
       </Dialog>
       {snackBarState && (
         <ChatSnackBar snackState={snackBarState}></ChatSnackBar>

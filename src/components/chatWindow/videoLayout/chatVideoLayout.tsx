@@ -32,9 +32,10 @@ export default function ChatVideoLayout(props: any) {
     console.log( stream)
     const videoEle :any = document.getElementById(videoEleName)
     if(videoEle){
+      console.log("found video element and set it")
       videoEle.srcObject = stream
     }
-     videoEle.play()
+    
   }
 
 
