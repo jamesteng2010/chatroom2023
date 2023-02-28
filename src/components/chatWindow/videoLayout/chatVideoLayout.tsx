@@ -7,7 +7,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 
 export default function ChatVideoLayout(props: any) {
   const largeScreen = useMediaQuery("(min-width:600px)");
-  const { chatStatus, videoProp, stopMatching, startMatch,localStream,remoteStream } = props;
+  const { chatStatus, videoProp, stopMatching, startMatch,localStream,remoteStream,peerId } = props;
  
   const [localVideoPos,setLocalVideoPos] = useState([0,0])
   useEffect(()=>{
@@ -43,11 +43,12 @@ export default function ChatVideoLayout(props: any) {
 
   return (
     <>
+    {peerId && 
       <ChatVideoControl
         chatStatus={chatStatus}
         startMatch={startMatch}
         stopMatching={stopMatching}
-      ></ChatVideoControl>
+      ></ChatVideoControl>}
       {chatStatus == CHAT_STATUS.IDEL && (
         <div>
           <video
@@ -63,7 +64,7 @@ export default function ChatVideoLayout(props: any) {
         </div>
       )}
 
-      {chatStatus == CHAT_STATUS.MATCHING && (
+      {(chatStatus == CHAT_STATUS.MATCHING || !peerId) && (
         <>
           <video  autoPlay id="localVideo" style={{width:largeScreen?200:100}} muted className="localVideo"></video>
 

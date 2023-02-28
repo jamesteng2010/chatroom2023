@@ -32,6 +32,8 @@ export default function ChatWindow(props: any) {
   const appContext = useContext(AppContext);
   const { appInFore } = appContext;
   const { show, closeChatWindow } = props;
+  const [slaveCall,setSlaveCall] = useState(null as any)
+  const [masterCall,setMasterCall] = useState(null as any)
 
   const [videoProp, setVideoProp] = useState({
     width: "auto" as any,
@@ -136,6 +138,7 @@ export default function ChatWindow(props: any) {
 
       peer.on("call",(slaveCall:any)=>{
           console.log("get call from master, answer it now>>>>>>>>>>>")
+        
           slaveCall.answer(localStream);
           console.log("on slave side , local stream is , ",localStream)
           console.log("slave call is , ",slaveCall)
@@ -145,6 +148,7 @@ export default function ChatWindow(props: any) {
             setRemoteStream(masterStream)
           
           })
+          setSlaveCall(slaveCall)
       })
 
      
@@ -165,17 +169,32 @@ export default function ChatWindow(props: any) {
         if (dest) {
             console.log("find dest is ,",dest)
             console.log("now local stream is , ",localStream)
-            const masterCall = peer.call(dest,localStream)
-            console.log("master call is , ",masterCall)
-            masterCall.on("stream",(slaveStream:any)=>{
+            const tempMasterCall = peer.call(dest,localStream)
+            console.log("master call is , ",tempMasterCall)
+            tempMasterCall.on("stream",(slaveStream:any)=>{
               console.log("get slave stream is , ",slaveStream)
               mediaConnectionEstablished()
               setRemoteStream(slaveStream)
             })
+            setMasterCall(tempMasterCall)
+            
         }
       });
     }
   }, [socket,localStream]);
+
+  useEffect(()=>{
+      if(slaveCall){
+        slaveCall.on("close",()=>{
+            console.log("slave call closed!!!")  
+        })
+      }
+      if(masterCall){
+        masterCall.on("close",()=>{
+          console.log("master call was closed!!")
+        })
+      }
+  },[slaveCall,masterCall])
 
   useEffect(() => {
     if (chatStatus == CHAT_STATUS.MATCHING) {
@@ -297,6 +316,12 @@ export default function ChatWindow(props: any) {
   };
   const stopMatching = () => {
     setChatStatus(CHAT_STATUS.IDEL);
+    if(slaveCall){
+      slaveCall.close()
+    }
+    if(masterCall){
+      masterCall.close()
+    }
   };
 
   return (
@@ -314,6 +339,7 @@ export default function ChatWindow(props: any) {
             videoProp={videoProp}
             localStream={localStream}
             remoteStream={remoteStream}
+            peerId={peerId}
           ></ChatVideoLayout>
           <div className="contactUsOnVideo">
             <a href="https://form.jotform.com/223587988216876" target="abc">
