@@ -8,12 +8,17 @@ import { getCookie } from "cookies-next";
 import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 import { convertUint8ToString, getRandomStr } from "@/utils/strUtil";
 import { io } from "socket.io-client";
-import { CHAT_STATUS, GlobalConfig, PEER_CMD, SOCKET_CMD } from "@/config";
+import {
+  CHAT_STATUS,
+  GlobalConfig,
+  PEER_CMD,
+  SERVER_ERROR_TYPE,
+  SOCKET_CMD,
+} from "@/config";
 
 import ChatSnackBar from "../ui/snackbar";
 import ChatVideoLayout from "./videoLayout/chatVideoLayout";
 import AppContext from "@/context/userDataContext";
-var Peer = require("simple-peer");
 
 export default function ChatWindow(props: any) {
   const [peer, setPeer] = useState(null as any);
@@ -32,8 +37,10 @@ export default function ChatWindow(props: any) {
   const appContext = useContext(AppContext);
   const { appInFore } = appContext;
   const { show, closeChatWindow } = props;
-  const [slaveCall,setSlaveCall] = useState(null as any)
-  const [masterCall,setMasterCall] = useState(null as any)
+  const [slaveCall, setSlaveCall] = useState(null as any);
+  const [masterCall, setMasterCall] = useState(null as any);
+  const [peerDataConnection, setPeerDataConnection] = useState(null as any);
+  const [serverErrorType, setServerErrorType] = useState("");
 
   const [videoProp, setVideoProp] = useState({
     width: "auto" as any,
@@ -52,9 +59,10 @@ export default function ChatWindow(props: any) {
   };
 
   useEffect(() => {
+    const clientToken: any = getCookie("clientToken");
     if (show) {
       // get client token
-      const clientToken: any = getCookie("clientToken");
+
       setClientToken(clientToken);
       // load peer js and initialized peer
       if (typeof navigator !== "undefined") {
@@ -64,13 +72,22 @@ export default function ChatWindow(props: any) {
 
       // initilize the socket
       console.log("initlized the socket===========>");
-      const tempSocket = io(GlobalConfig.backendAPI.host);
-      setSocket(tempSocket);
+      try {
+        const tempSocket = io(GlobalConfig.backendAPI.host);
+        setSocket(tempSocket);
+      } catch (e) {
+        console.log("failed to connect socket server");
+        setServerErrorType(SERVER_ERROR_TYPE.FAILED_CONNECT_SOCKET)
+      }
 
       window.addEventListener("resize", setVideoSize);
       setVideoSize();
     } else {
-      setSocket(null);
+      if (socket) {
+        socket.off(`${clientToken}_matched`);
+        setSocket(null);
+      }
+
       resetPeer();
     }
   }, [show]);
@@ -132,69 +149,98 @@ export default function ChatWindow(props: any) {
     if (peer && localStream) {
       console.log("setup peer events.....");
       peer.on("open", (peerId: any) => {
-        console.log("peer id is , ",peerId)
+        console.log("peer id is , ", peerId);
         setPeerId(peerId);
       });
 
-      peer.on("call",(slaveCall:any)=>{
-          console.log("get call from master, answer it now>>>>>>>>>>>")
-        
-          slaveCall.answer(localStream);
-          console.log("on slave side , local stream is , ",localStream)
-          console.log("slave call is , ",slaveCall)
-          slaveCall.on("stream",(masterStream:any)=>{
-            mediaConnectionEstablished()
-            console.log("set remote stream as master stream>>>>>>>>>>>")
-            setRemoteStream(masterStream)
-          
-          })
-          setSlaveCall(slaveCall)
-      })
+      peer.on("call", (tempSlaveCall: any) => {
+        console.log("get call from master, answer it now>>>>>>>>>>>");
 
-     
+        tempSlaveCall.answer(localStream);
+        console.log("on slave side , local stream is , ", localStream);
+        console.log("slave call is , ", tempSlaveCall);
+        tempSlaveCall.on("stream", (masterStream: any) => {
+          mediaConnectionEstablished();
+          console.log("set remote stream as master stream>>>>>>>>>>>");
+          setRemoteStream(masterStream);
+        });
+
+        setSlaveCall(tempSlaveCall);
+      });
+
+      peer.on("error", (err: any) => {
+        setServerErrorType(SERVER_ERROR_TYPE.FAILED_GET_PEER_ID);
+        console.log("there is error on peer, ", err);
+      });
+
+      peer.on("connection", (dataConn: any) => {
+        console.log(
+          "get a connection from peer, which keep in slave side====>>>>>"
+        );
+        setPeerDataConnection(dataConn);
+      });
     }
-  }, [peer,localStream]);
+  }, [peer, localStream]);
 
-  const mediaConnectionEstablished = ()=>{
-    console.log("master and slave connected!!!")
-    setChatStatus(CHAT_STATUS.CONNECTED)
-    clearPeerMatch_whenConnected()
-  }
+  const mediaConnectionEstablished = () => {
+    console.log("master and slave connected!!!");
+    setChatStatus(CHAT_STATUS.CONNECTED);
+    clearPeerMatch_whenConnected();
+  };
 
   useEffect(() => {
     if (socket && localStream) {
+      console.log("setup socket match event=================>>>>>>>>");
       socket.on(`${clientToken}_matched`, async (data: any) => {
         console.log(">>>>> matched, which is ", data);
         const { dest, room } = data;
         if (dest) {
-            console.log("find dest is ,",dest)
-            console.log("now local stream is , ",localStream)
-            const tempMasterCall = peer.call(dest,localStream)
-            console.log("master call is , ",tempMasterCall)
-            tempMasterCall.on("stream",(slaveStream:any)=>{
-              console.log("get slave stream is , ",slaveStream)
-              mediaConnectionEstablished()
-              setRemoteStream(slaveStream)
-            })
-            setMasterCall(tempMasterCall)
-            
+          console.log("find dest is ,", dest);
+          console.log("now local stream is , ", localStream);
+          const tempMasterCall = peer.call(dest, localStream);
+          console.log("master call is , ", tempMasterCall);
+          try {
+            tempMasterCall.on("stream", (slaveStream: any) => {
+              console.log("get slave stream is , ", slaveStream);
+              mediaConnectionEstablished();
+              setRemoteStream(slaveStream);
+            });
+            setMasterCall(tempMasterCall);
+          } catch (e) {
+            console.log(e);
+          }
+
+          // start a data connection to peer
+          console.log(
+            "start a data connection to talk each other while connecting..."
+          );
+          var dataConn = peer.connect(dest);
+          setPeerDataConnection(dataConn);
         }
       });
     }
-  }, [socket,localStream]);
+  }, [socket, localStream]);
 
-  useEffect(()=>{
-      if(slaveCall){
-        slaveCall.on("close",()=>{
-            console.log("slave call closed!!!")  
-        })
-      }
-      if(masterCall){
-        masterCall.on("close",()=>{
-          console.log("master call was closed!!")
-        })
-      }
-  },[slaveCall,masterCall])
+  useEffect(() => {
+    if (peerDataConnection) {
+      peerDataConnection.on("data", (data: any) => {
+        console.log("receive data is ", data);
+        setPeerLastActivity(getNow());
+      });
+
+      peerDataConnection.on("close", () => {
+        const stopButtonPressedEle: any =
+          document.getElementById("stopButtonPressed");
+        console.log(
+          "now stop button pressed value is , ",
+          stopButtonPressedEle.value
+        );
+        if (stopButtonPressedEle.value != "Y") {
+          startChat();
+        }
+      });
+    }
+  }, [peerDataConnection, chatStatus]);
 
   useEffect(() => {
     if (chatStatus == CHAT_STATUS.MATCHING) {
@@ -202,8 +248,7 @@ export default function ChatWindow(props: any) {
       matchPartnerViaSocketServer();
       updateMatchingTimeStamp();
     }
-    if(chatStatus == CHAT_STATUS.IDEL){
-      
+    if (chatStatus == CHAT_STATUS.IDEL) {
     }
   }, [chatStatus]);
 
@@ -236,7 +281,6 @@ export default function ChatWindow(props: any) {
   };
 
   const clearPeerMatch_whenConnected = async () => {
-  
     await sendRequest("/api/matching/removePeerMatch", {
       method: "POST",
       headers: {
@@ -248,8 +292,6 @@ export default function ChatWindow(props: any) {
       }),
     });
   };
-
-  
 
   const updateMatchingTimeStamp = async () => {
     const chatStatusEle: any = document.getElementById("chatStatus");
@@ -309,18 +351,23 @@ export default function ChatWindow(props: any) {
   };
 
   const closeChat = () => {
+    stopMatching();
+    setPeerId("");
+
     closeChatWindow && closeChatWindow();
   };
   const startChat = () => {
     setChatStatus(CHAT_STATUS.MATCHING);
   };
   const stopMatching = () => {
-    setChatStatus(CHAT_STATUS.IDEL);
-    if(slaveCall){
-      slaveCall.close()
+    const stopButtonPressedEle: any =
+      document.getElementById("stopButtonPressed");
+    if (stopButtonPressedEle) {
+      stopButtonPressedEle.value = "Y";
     }
-    if(masterCall){
-      masterCall.close()
+    setChatStatus(CHAT_STATUS.IDEL);
+    if (peerDataConnection) {
+      peerDataConnection.close();
     }
   };
 
@@ -348,6 +395,7 @@ export default function ChatWindow(props: any) {
           </div>
         </div>
 
+        <input type="hidden" value="N" id="stopButtonPressed" />
         <input
           type="hidden"
           value={peerLastActivity}

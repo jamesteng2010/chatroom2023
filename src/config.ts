@@ -9,6 +9,11 @@ export const GlobalConfig = {
     }
 }
 
+export enum SERVER_ERROR_TYPE {
+    FAILED_GET_PEER_ID  = "-1",
+    FAILED_CONNECT_SOCKET = "-2"
+}
+
 export enum CHAT_STATUS {
     IDEL = 0,
     MATCHING =1 ,
