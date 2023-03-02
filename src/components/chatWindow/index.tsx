@@ -7,6 +7,7 @@ import { sendRequest, sleep } from "@/utils/httpUtils";
 import { getCookie } from "cookies-next";
 import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 import { convertUint8ToString, getRandomStr } from "@/utils/strUtil";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { io } from "socket.io-client";
 import {
   CHAT_STATUS,
@@ -223,10 +224,7 @@ export default function ChatWindow(props: any) {
 
   useEffect(() => {
     if (peerDataConnection) {
-      peerDataConnection.on("data", (data: any) => {
-        console.log("receive data is ", data);
-        setPeerLastActivity(getNow());
-      });
+    
 
       peerDataConnection.on("close", () => {
         const stopButtonPressedEle: any =
@@ -376,7 +374,7 @@ export default function ChatWindow(props: any) {
       <Dialog fullScreen open={show} onClose={closeChat}>
         <div style={{ background: "black", overflow: "hidden" }}>
           <div className="closeIcon" onClick={closeChat}>
-            <CloseIcon></CloseIcon>
+            <ArrowBackIcon></ArrowBackIcon>
           </div>
 
           <ChatVideoLayout
@@ -387,12 +385,13 @@ export default function ChatWindow(props: any) {
             localStream={localStream}
             remoteStream={remoteStream}
             peerId={peerId}
+            dataConn={peerDataConnection}
           ></ChatVideoLayout>
-          <div className="contactUsOnVideo">
+          {/* <div className="contactUsOnVideo">
             <a href="https://form.jotform.com/223587988216876" target="abc">
               Contact us
             </a>
-          </div>
+          </div> */}
         </div>
 
         <input type="hidden" value="N" id="stopButtonPressed" />

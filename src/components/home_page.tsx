@@ -47,7 +47,7 @@ function LeftPart(props: any) {
       <div style={{ marginTop: 10 }}>
         {appContext.loadingUserData && <CircularProgress/>}
         {!appContext.loadingUserData && <Button onClick={startVideoClick} startIcon={<DuoIcon />} variant="outlined">Start Video Chat Now</Button>}
-        <Button variant="outlined">Test PeerJS</Button>
+      
       </div>
 
     
