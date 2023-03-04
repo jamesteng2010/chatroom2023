@@ -1,9 +1,11 @@
 import Button from "@mui/material/Button";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import SendIcon from "@mui/icons-material/Send";
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import AppContext from "@/context/userDataContext";
 
 export default function ChatMessagePanel(props: any) {
+  const {largeScreen} = useContext(AppContext)
   const { sendMessage, messageList,messageUpdateTime,closeChatWindow } = props;
   useEffect(() => {
     document.getElementById("messageField")?.focus();
@@ -19,7 +21,7 @@ export default function ChatMessagePanel(props: any) {
  
   const [message, setMessage] = useState("");
   return (
-    <div className="chatMessagePanel">
+    <div className="chatMessagePanel"  style={{minHeight:'300px'}}>
       <div className="closeChatIcon" onClick={closeChatWindow}><CancelOutlinedIcon/></div>
       <div className="messageListPart">
     
@@ -29,7 +31,7 @@ export default function ChatMessagePanel(props: any) {
       </div>
       <div className="messageActionPart">
         <input
-        autoComplete="false"
+        autoComplete="off"
           placeholder="Say something...."
           type="text"
           id="messageField"

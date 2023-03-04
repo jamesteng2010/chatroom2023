@@ -186,7 +186,7 @@ a:visited {
 .chatMessagePanel{
  background-color: white;
   color: red;
-
+  position: relative;
   z-index: 2000;
   font-size: 16px;
   padding: 10px;

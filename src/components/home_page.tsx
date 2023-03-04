@@ -14,7 +14,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 export default function HomePage(props:any) {
     const {startVideoClick} = props;
-  const largeScreen = useMediaQuery("(min-width:600px)");
+    const {largeScreen} = useContext(AppContext)
+  // const largeScreen = useMediaQuery("(min-width:600px)");
   return (
     <div className="bodyPart">
       <Box sx={{ flexGrow: 1, height: "100%" }}>

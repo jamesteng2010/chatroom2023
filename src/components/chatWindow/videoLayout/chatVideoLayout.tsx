@@ -121,8 +121,8 @@ export default function ChatVideoLayout(props: any) {
       )}
 
       {chatStatus == CHAT_STATUS.CONNECTED && (
-        <div className="videoChatLayer">
-          <div className="videos">
+        <div className="videoChatLayer" style={{flexDirection : largeScreen?'row':'column'}}>
+          <div className="videos" >
             <video
               className="localVideo"
               style={{ width: largeScreen ? 200 : 100 }}

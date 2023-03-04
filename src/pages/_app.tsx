@@ -12,8 +12,10 @@ import "../style.css";
 import { io } from "socket.io-client";
 
 import { AppProps } from "next/app";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 export default function Index({ Component, pageProps }: AppProps) {
+  const largeScreen = useMediaQuery("(min-width:600px)");
   const appContext = useContext(AppContext);
   const [userData, setUserData] = useState("");
   const [showChatWindow, setShowChatWindow] = useState(false);
@@ -59,7 +61,8 @@ export default function Index({ Component, pageProps }: AppProps) {
         loadingUserData,
         setLoadingUserData,
         setSignUpStep,
-        appInFore
+        appInFore,
+        largeScreen
       }}
     >
       <SiteLayout loginClick={() => setSignUp(true)}>
