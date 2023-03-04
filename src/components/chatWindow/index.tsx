@@ -108,6 +108,7 @@ export default function ChatWindow(props: any) {
   };
 
   const setVideoSize = () => {
+   
     setVideoProp({
       width: window.innerWidth,
       height: window.innerHeight,
@@ -366,6 +367,9 @@ export default function ChatWindow(props: any) {
     setChatStatus(CHAT_STATUS.IDEL);
     if (peerDataConnection) {
       peerDataConnection.close();
+    }
+    if(socket){
+      socket.off(`${clientToken}_matched`);
     }
   };
 

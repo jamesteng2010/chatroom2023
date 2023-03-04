@@ -78,6 +78,7 @@ export default function ChatVideoLayout(props: any) {
       {peerId && (
         <ChatVideoControl
           chatStatus={chatStatus}
+          videoProp={videoProp}
           startMatch={startMatch}
           stopMatching={stopMatching}
         ></ChatVideoControl>
@@ -121,7 +122,7 @@ export default function ChatVideoLayout(props: any) {
       )}
 
       {chatStatus == CHAT_STATUS.CONNECTED && (
-        <div className="videoChatLayer" style={{flexDirection : largeScreen?'row':'column'}}>
+        <div className="videoChatLayer">
           <div className="videos" >
             <video
               className="localVideo"

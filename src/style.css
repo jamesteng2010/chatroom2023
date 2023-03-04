@@ -184,20 +184,41 @@ a:visited {
 }
 
 .chatMessagePanel{
- background-color: white;
-  color: red;
-  position: relative;
-  z-index: 2000;
+
   font-size: 16px;
-  padding: 10px;
-  border: 2px solid gray;
+ 
   display: flex;
   flex-direction: column;
-  
+  position: absolute;
+  right : 0px;
+  bottom: 0px;
+  width:40%
+}
+.floatChatMessagePanel{
+ 
+  height: 300px;
+  bottom: 0px;
+
+  width: 96%;
+
+
+}
+.messagePanel{
+
+  background-color: white;
+  opacity: 0.6;
+  z-index: 2000;
+ 
+  padding: 10px;
+  color: black;
+ 
+  display: flex;
+  flex-direction: column;
+  position: absolute;
 }
 .messageInputField{
   height: 30px;
-  width: 300px;
+  width: 100%;
   border-radius: 10px;
  
 }
@@ -208,6 +229,13 @@ a:visited {
 .messageListPart{
   color: text;
   flex-grow: 1;
+  border: 1px solid yellow;
+}
+.chatWindowTitle{
+  display: flex;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
 }
 .videoChatLayer{
   display: flex;
@@ -229,4 +257,9 @@ a:visited {
 }
 .videos{
   position: relative;
+}
+.avControl{
+  position: absolute;
+  z-index: 1001;
+  color: white;
 }

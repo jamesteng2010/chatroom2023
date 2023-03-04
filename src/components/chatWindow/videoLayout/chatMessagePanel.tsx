@@ -18,11 +18,19 @@ export default function ChatMessagePanel(props: any) {
     sendMessage(message)
     setMessage('')
   }
+  const inputKeyDown = (e:any)=>{
+    if(e.keyCode == 13){
+      sendMsgToPartner()
+    }
+  }
  
   const [message, setMessage] = useState("");
   return (
-    <div className="chatMessagePanel"  style={{minHeight:'300px'}}>
+    <div className={largeScreen?"messagePanel chatMessagePanel":" messagePanel floatChatMessagePanel"}  style={{minHeight:'300px'}}>
       <div className="closeChatIcon" onClick={closeChatWindow}><CancelOutlinedIcon/></div>
+      <div className="chatWindowTitle">
+        Chat with XXX
+      </div>
       <div className="messageListPart">
     
         {messageList.map((m: any) => {
@@ -32,6 +40,7 @@ export default function ChatMessagePanel(props: any) {
       <div className="messageActionPart">
         <input
         autoComplete="off"
+        onKeyDown={inputKeyDown}
           placeholder="Say something...."
           type="text"
           id="messageField"
