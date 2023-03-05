@@ -373,6 +373,16 @@ export default function ChatWindow(props: any) {
     }
   };
 
+  const disableVideo = ()=>{
+    if(remoteStream){
+      remoteStream.getVideoTracks()[0].stop()
+    }
+  }
+  const disableAudio=()=>{
+    if(remoteStream){
+      remoteStream.getAudioTracks()[0].enabled = !remoteStream.getAudioTracks()[0].enabled ;
+    }
+  }
   return (
     <>
       <Dialog fullScreen open={show} onClose={closeChat}>
@@ -382,6 +392,8 @@ export default function ChatWindow(props: any) {
           </div>
 
           <ChatVideoLayout
+            disableAudio={disableAudio}
+            disableVideo={disableVideo}
             chatStatus={chatStatus}
             stopMatching={stopMatching}
             startMatch={startChat}

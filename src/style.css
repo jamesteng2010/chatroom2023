@@ -262,4 +262,6 @@ a:visited {
   position: absolute;
   z-index: 1001;
   color: white;
+  left : 0px;
+  
 }

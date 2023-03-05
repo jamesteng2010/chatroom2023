@@ -18,6 +18,8 @@ export default function ChatVideoLayout(props: any) {
     remoteStream,
     peerId,
     dataConn,
+    disableVideo,
+    disableAudio
   } = props;
 
   const [messageList, setMessageList] = useState([] as any);
@@ -81,6 +83,8 @@ export default function ChatVideoLayout(props: any) {
           videoProp={videoProp}
           startMatch={startMatch}
           stopMatching={stopMatching}
+          disableAudio={disableAudio}
+          disableVideo={disableVideo}
         ></ChatVideoControl>
       )}
       {chatStatus == CHAT_STATUS.IDEL && (

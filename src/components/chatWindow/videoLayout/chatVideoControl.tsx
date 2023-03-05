@@ -9,7 +9,7 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 
 export default function ChatVideoControl(props: any) {
   const {largeScreen} = useContext(AppContext)
-  const { chatStatus, stopMatching, startMatch,videoProp } = props;
+  const { chatStatus, stopMatching, startMatch,videoProp,disableVideo,disableAudio } = props;
   const [avControlPos,setAvControlPos] = useState({x:0,y:0})
   useEffect(()=>{
    
@@ -30,10 +30,10 @@ export default function ChatVideoControl(props: any) {
       if(expect_videoHeight<videoProp.height){
           marginOnVertical = true
 
-          setAvControlPos({
-            y : (parseInt(videoProp.height) - expect_videoHeight)/2,
-            x : videoProp.width - 130
-          })
+          // setAvControlPos({
+          //   y : (parseInt(videoProp.height) - expect_videoHeight)/2,
+          //   x : videoProp.width - 130
+          // })
 
       }
       if(expect_videoWidth<videoProp.width){
@@ -51,15 +51,7 @@ export default function ChatVideoControl(props: any) {
   },[videoProp])
   return (
     <>
-      <div className="avControl" style={{left : avControlPos.x,top : avControlPos.y}} id="avControl">
-        <div style={{display : 'flex',color:'red'}}>
-          <Button size="small" ><VideocamOffIcon></VideocamOffIcon></Button>
-         
-          <Button size="small">  <VolumeOffIcon></VolumeOffIcon></Button>
-         
-        
-        </div>
-      </div>
+    
       <div className="videoControl">
       
         <div
@@ -92,6 +84,16 @@ export default function ChatVideoControl(props: any) {
               </div>
             )}
         </div>
+
+        <div className="avControl" id="avControl">
+        <div style={{display : 'flex',color:'red'}}>
+          <Button size="small" onClick={disableVideo} ><VideocamOffIcon></VideocamOffIcon></Button>
+         
+          <Button size="small" onClick={disableAudio}>  <VolumeOffIcon></VolumeOffIcon></Button>
+         
+        
+        </div>
+      </div>
       </div>
    
     </>
