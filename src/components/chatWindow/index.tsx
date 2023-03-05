@@ -382,7 +382,7 @@ export default function ChatWindow(props: any) {
   const disableAudio=()=>{
     if(localStream){
       localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled ;
-      peerDataConnection.send(PEER_CMD.STOP_VIDEO)
+      peerDataConnection.send(PEER_CMD.STOP_AUDIO)
     }
   }
   return (
