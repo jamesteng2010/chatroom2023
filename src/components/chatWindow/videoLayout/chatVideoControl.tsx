@@ -5,11 +5,15 @@ import StopIcon from "@mui/icons-material/Stop";
 import {useContext, useEffect, useState} from 'react'
 import AppContext from "@/context/userDataContext";
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 export default function ChatVideoControl(props: any) {
   const {largeScreen} = useContext(AppContext)
   const { chatStatus, stopMatching, startMatch,videoProp,disableVideo,disableAudio } = props;
+  const [videoStatus,setVideoStatus] = useState(true)
+  const [audioStatus,setAudioStatus] = useState(true)
   const [avControlPos,setAvControlPos] = useState({x:0,y:0})
   useEffect(()=>{
    
@@ -49,6 +53,16 @@ export default function ChatVideoControl(props: any) {
 
     console.log("video props is , ",videoProp)
   },[videoProp])
+
+  const switchVideo = ()=>{
+    setVideoStatus(!videoStatus)
+    disableVideo()
+  }
+
+  const switchAudio = ()=>{
+    setAudioStatus(!audioStatus)
+    disableAudio()
+  }
   return (
     <>
     
@@ -87,9 +101,13 @@ export default function ChatVideoControl(props: any) {
 
         <div className="avControl" id="avControl">
         <div style={{display : 'flex',color:'red'}}>
-          <Button size="small" onClick={disableVideo} ><VideocamOffIcon></VideocamOffIcon></Button>
+          <Button size="small" onClick={switchVideo} >
+            {videoStatus && <VideocamIcon></VideocamIcon>}
+            {!videoStatus && <VideocamOffIcon></VideocamOffIcon>}</Button>
          
-          <Button size="small" onClick={disableAudio}>  <VolumeOffIcon></VolumeOffIcon></Button>
+          <Button size="small" onClick={switchAudio}>  
+          {audioStatus && <VolumeUpIcon></VolumeUpIcon>}
+          { !audioStatus && <VolumeOffIcon></VolumeOffIcon>}</Button>
          
         
         </div>

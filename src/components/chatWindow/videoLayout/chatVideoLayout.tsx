@@ -1,4 +1,4 @@
-import { CHAT_STATUS } from "@/config";
+import { CHAT_STATUS, PEER_CMD } from "@/config";
 import ChatVideoControl from "./chatVideoControl";
 import { CircularProgress } from "@mui/material";
 import { useRef, useEffect, useState } from "react";
@@ -19,7 +19,7 @@ export default function ChatVideoLayout(props: any) {
     peerId,
     dataConn,
     disableVideo,
-    disableAudio
+    disableAudio,
   } = props;
 
   const [messageList, setMessageList] = useState([] as any);
@@ -42,12 +42,26 @@ export default function ChatVideoLayout(props: any) {
   useEffect(() => {
     if (dataConn) {
       dataConn.on("data", (data: any) => {
-        const currentMsgList = messageList;
-        const receivedMsg = JSON.parse(data);
-        currentMsgList.push(receivedMsg);
-        setMessageList(currentMsgList);
-        console.log("what is now for list : ", messageList);
-        setMessageUpdateTime(getNow());
+        if (data == PEER_CMD.STOP_VIDEO) {
+          if (remoteStream) {
+            remoteStream.getVideoTracks()[0].enabled =
+              !remoteStream.getVideoTracks()[0].enabled;
+          }
+        }
+
+        if (data == PEER_CMD.STOP_AUDIO) {
+          if (remoteStream) {
+            remoteStream.getAudioTracks()[0].enabled =
+              !remoteStream.getAudioTracks()[0].enabled;
+          }
+        } else {
+          const currentMsgList = messageList;
+          const receivedMsg = JSON.parse(data);
+          currentMsgList.push(receivedMsg);
+          setMessageList(currentMsgList);
+          console.log("what is now for list : ", messageList);
+          setMessageUpdateTime(getNow());
+        }
       });
     }
   }, [dataConn]);
@@ -127,7 +141,7 @@ export default function ChatVideoLayout(props: any) {
 
       {chatStatus == CHAT_STATUS.CONNECTED && (
         <div className="videoChatLayer">
-          <div className="videos" >
+          <div className="videos">
             <video
               className="localVideo"
               style={{ width: largeScreen ? 200 : 100 }}
@@ -156,7 +170,10 @@ export default function ChatVideoLayout(props: any) {
             />
           )}
           {!showChatWindow && (
-            <div className="floatChatIcon" onClick={()=>setShowChatWindow(true)}>
+            <div
+              className="floatChatIcon"
+              onClick={() => setShowChatWindow(true)}
+            >
               <TextsmsOutlinedIcon />
             </div>
           )}

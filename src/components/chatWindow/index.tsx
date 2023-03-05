@@ -374,13 +374,15 @@ export default function ChatWindow(props: any) {
   };
 
   const disableVideo = ()=>{
-    if(remoteStream){
-      remoteStream.getVideoTracks()[0].stop()
+    if(localStream){
+      localStream.getVideoTracks()[0].enabled =  !localStream.getVideoTracks()[0].enabled
+      peerDataConnection.send(PEER_CMD.STOP_VIDEO)
     }
   }
   const disableAudio=()=>{
-    if(remoteStream){
-      remoteStream.getAudioTracks()[0].enabled = !remoteStream.getAudioTracks()[0].enabled ;
+    if(localStream){
+      localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled ;
+      peerDataConnection.send(PEER_CMD.STOP_VIDEO)
     }
   }
   return (

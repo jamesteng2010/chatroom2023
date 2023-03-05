@@ -34,5 +34,7 @@ export enum SOCKET_CMD{
 
 export enum PEER_CMD{
     I_AM_HERE = '[CMD]:IAMHERE',
-    PARTNER_STOP = '[CMD]:PARTNER_STOP'
+    PARTNER_STOP = '[CMD]:PARTNER_STOP',
+    STOP_VIDEO = '[CMD]:STOP_VIDEO',
+    STOP_AUDIO = '[CMD]:STOP_AUDIO'
 }
