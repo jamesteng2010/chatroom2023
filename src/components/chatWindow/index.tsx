@@ -7,7 +7,7 @@ import { sendRequest, sleep } from "@/utils/httpUtils";
 import { getCookie } from "cookies-next";
 import { getDiffFromNow, getNow, getTimeBetweenNow } from "@/utils/dateUtils";
 import { convertUint8ToString, getRandomStr } from "@/utils/strUtil";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { io } from "socket.io-client";
 import {
   CHAT_STATUS,
@@ -42,6 +42,8 @@ export default function ChatWindow(props: any) {
   const [masterCall, setMasterCall] = useState(null as any);
   const [peerDataConnection, setPeerDataConnection] = useState(null as any);
   const [serverErrorType, setServerErrorType] = useState("");
+  const [partnerName, setPartnerName] = useState("");
+  const [geo, setGeo] = useState([] as any);
 
   const [videoProp, setVideoProp] = useState({
     width: "auto" as any,
@@ -62,6 +64,7 @@ export default function ChatWindow(props: any) {
   useEffect(() => {
     const clientToken: any = getCookie("clientToken");
     if (show) {
+      getUserLocation();
       // get client token
 
       setClientToken(clientToken);
@@ -78,7 +81,7 @@ export default function ChatWindow(props: any) {
         setSocket(tempSocket);
       } catch (e) {
         console.log("failed to connect socket server");
-        setServerErrorType(SERVER_ERROR_TYPE.FAILED_CONNECT_SOCKET)
+        setServerErrorType(SERVER_ERROR_TYPE.FAILED_CONNECT_SOCKET);
       }
 
       window.addEventListener("resize", setVideoSize);
@@ -92,6 +95,18 @@ export default function ChatWindow(props: any) {
       resetPeer();
     }
   }, [show]);
+
+  const getUserLocation = async () => {
+    const userLocation: any = await sendRequest(
+      "https://geolocation-db.com/json/",
+      {
+        method: "GET",
+      }
+    );
+    setGeo([userLocation.latitude, userLocation.longitude]);
+    console.log("got user location....");
+    console.log(userLocation);
+  };
 
   const resetPeer = () => {
     if (peer) {
@@ -108,7 +123,6 @@ export default function ChatWindow(props: any) {
   };
 
   const setVideoSize = () => {
-   
     setVideoProp({
       width: window.innerWidth,
       height: window.innerHeight,
@@ -195,7 +209,7 @@ export default function ChatWindow(props: any) {
       console.log("setup socket match event=================>>>>>>>>");
       socket.on(`${clientToken}_matched`, async (data: any) => {
         console.log(">>>>> matched, which is ", data);
-        const { dest, room } = data;
+        const { dest, room, partner } = data;
         if (dest) {
           console.log("find dest is ,", dest);
           console.log("now local stream is , ", localStream);
@@ -208,6 +222,18 @@ export default function ChatWindow(props: any) {
               setRemoteStream(slaveStream);
             });
             setMasterCall(tempMasterCall);
+            const partnerInfo = await sendRequest(
+              "/api/getUserInfoByClientToken",
+              {
+                method: "POST",
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ queryClient: partner,returnFields:{name : 1} }),
+              }
+            );
+            console.log("partnerInfo is ,", partnerInfo);
           } catch (e) {
             console.log(e);
           }
@@ -225,8 +251,6 @@ export default function ChatWindow(props: any) {
 
   useEffect(() => {
     if (peerDataConnection) {
-    
-
       peerDataConnection.on("close", () => {
         const stopButtonPressedEle: any =
           document.getElementById("stopButtonPressed");
@@ -368,23 +392,29 @@ export default function ChatWindow(props: any) {
     if (peerDataConnection) {
       peerDataConnection.close();
     }
-    if(socket){
+    if (socket) {
       socket.off(`${clientToken}_matched`);
     }
   };
 
-  const disableVideo = ()=>{
-    if(localStream){
-      localStream.getVideoTracks()[0].enabled =  !localStream.getVideoTracks()[0].enabled
-      peerDataConnection.send(PEER_CMD.STOP_VIDEO)
+  const disableVideo = () => {
+    if (localStream) {
+      localStream.getVideoTracks()[0].enabled =
+        !localStream.getVideoTracks()[0].enabled;
+      if (peerDataConnection) {
+        peerDataConnection.send(PEER_CMD.STOP_VIDEO);
+      }
     }
-  }
-  const disableAudio=()=>{
-    if(localStream){
-      localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled ;
-      peerDataConnection.send(PEER_CMD.STOP_AUDIO)
+  };
+  const disableAudio = () => {
+    if (localStream) {
+      localStream.getAudioTracks()[0].enabled =
+        !localStream.getAudioTracks()[0].enabled;
+      if (peerDataConnection) {
+        peerDataConnection.send(PEER_CMD.STOP_AUDIO);
+      }
     }
-  }
+  };
   return (
     <>
       <Dialog fullScreen open={show} onClose={closeChat}>

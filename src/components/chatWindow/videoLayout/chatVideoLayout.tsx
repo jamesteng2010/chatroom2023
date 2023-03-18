@@ -42,14 +42,13 @@ export default function ChatVideoLayout(props: any) {
   useEffect(() => {
     if (dataConn) {
       dataConn.on("data", (data: any) => {
+        console.log("received data is : ", data);
         if (data == PEER_CMD.STOP_VIDEO) {
           if (remoteStream) {
             remoteStream.getVideoTracks()[0].enabled =
               !remoteStream.getVideoTracks()[0].enabled;
           }
-        }
-
-        if (data == PEER_CMD.STOP_AUDIO) {
+        } else if (data == PEER_CMD.STOP_AUDIO) {
           if (remoteStream) {
             remoteStream.getAudioTracks()[0].enabled =
               !remoteStream.getAudioTracks()[0].enabled;

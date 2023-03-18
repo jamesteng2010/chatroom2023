@@ -11,13 +11,13 @@ export default async function api_getUserInfoByClientToken(
     req: NextApiRequest,
     res: NextApiResponse
   ) {
-    
+    const {queryClient,returnFields} = req.body
     const headers = req.headers;
     const {clientToken} = parseCookie(headers?.cookie as string)
     console.log(clientToken)
-    const foundMobile = await findOneCollection(GlobalConfig.databaseName,"clientToken",{clientToken},{mobile:1})
+    const foundMobile = await findOneCollection(GlobalConfig.databaseName,"clientToken",{clientToken : queryClient || clientToken},{mobile:1})
     if(foundMobile){
-        const foundUser = await findOneCollection(GlobalConfig.databaseName,"user",{mobile : foundMobile.mobile})
+        const foundUser = await findOneCollection(GlobalConfig.databaseName,"user",{mobile : foundMobile.mobile},returnFields)
         if(foundUser){
             res.status(200).send({result : 1,foundUser})
         }
